@@ -184,6 +184,16 @@ const routes = [
         meta: { requiresAuth: true },
       },
       // ----end of sales----
+
+       // ----POS----
+       {
+        path: "/pos",
+        name: "pos",
+        component: () => import("@/views/pos/POSView"),
+        meta: { requiresAuth: true },
+      },
+      // ----end of POS----
+
     ],
   },
   {
