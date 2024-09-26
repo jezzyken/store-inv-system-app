@@ -173,8 +173,9 @@ export default {
         value: "reason",
       },
       {
-        text: "Items",
+        text: "No of Items",
         align: "start",
+        value: "noOfItems",
       },
       { text: "Actions", value: "actions", sortable: false },
     ],

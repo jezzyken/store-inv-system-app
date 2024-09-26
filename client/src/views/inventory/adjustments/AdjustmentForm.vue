@@ -59,7 +59,7 @@
           <thead>
             <tr>
               <th class="text-left">Product</th>
-              <th class="text-left">Product Code</th>
+              <!-- <th class="text-left">Product Code</th> -->
               <th class="text-left">Stocks</th>
               <th class="text-center">Quantity</th>
               <th class="text-left" width="20%">Type</th>
@@ -70,9 +70,6 @@
             <tr v-for="(stock, i) in items.stocks" :key="i">
               <td class="pa-5">
                 <span>{{ stock.name }}</span>
-              </td>
-              <td class="pa-5">
-                <span>{{ stock.productCode }}</span>
               </td>
               <td class="pa-5">
                 <span>{{ stock.availableStocks }}</span>
@@ -118,7 +115,7 @@
       </v-simple-table>
     </v-sheet>
 
-    <v-sheet elevation="1" class="pa-5 mt-5" v-if="items.stocks != 0">
+    <v-sheet elevation="1" class="pa-5 mt-5">
       <v-row>
         <v-col cols="12" md="4">
           <v-text-field
@@ -215,12 +212,12 @@ export default {
       this.isLoading = true;
       const response = await this.getAdjustmentById(this.$route.params.id);
 
-      const { reason, date, items } = response.result[0];
+      const { reason, date, stockItems } = response.result[0];
 
       this.items.date = moment(date).format("YYYY-MM-DD");
       this.items.reason = reason;
 
-      for (let item of items) {
+      for (let item of stockItems) {
         const data = {
           name: item.product.name,
           quantity: item.quantity,
@@ -229,11 +226,13 @@ export default {
           items_id: item.item_id,
           operation: item.operation,
         };
-
         if (item.product.type === "Variants") {
-          data.variant = item.variant._id;
-          data.name = `${item.product.name}-${item.variant.name}`;
-          data.availableStocks = item.variant.stocks;
+          const variantInfo = item.product.variants.find(
+            (variant) => variant._id == item.variant
+          );
+          data.variant = variantInfo._id;
+          data.name = variantInfo.name;
+          data.availableStocks = variantInfo.stocks;
         }
 
         this.items.stocks.push(data);
@@ -243,26 +242,24 @@ export default {
     },
 
     async onSelectItem(item) {
-      const existingItem = this.items.stocks.find((stock) =>
-        item.type === "Variants"
-          ? stock.product === item._id && stock.variant === item.variants._id
-          : stock.product === item._id
+      const existingItem = this.items.stocks.find(
+        (stock) => stock.product === item._id || stock.variant === item._id
       );
 
       if (!existingItem) {
         const data = {
-          product: item._id,
           name: item.name,
           availableStocks: item.stocks,
+          product: item.productId,
         };
 
         if (item.type === "Variants") {
-          data.variant = item.variants._id;
+          data.variant = item._id;
           data.name = item.name;
-          data.availableStocks = item.variants.stocks;
+          data.availableStocks = item.stocks;
         }
 
-        this.items.stocks.push(data);
+        this.items.stocks.push({ ...data, product: item.productId });
       }
     },
 
@@ -273,7 +270,7 @@ export default {
         reason: this.items.reason,
       };
       await this.addItem(data);
-      this.$router.push("/adjustment");
+      // this.$router.push("/adjustment");
     },
 
     async onUpdateItem() {
@@ -301,16 +298,34 @@ export default {
     },
 
     async fetch() {
-      const suppliers = await this.getSupplierItems();
       const products = await this.getProductItems();
-      this.suppliers = suppliers.result;
-      this.products = products.result.map((product) => {
-        if (product.type === "Variants") {
-          product.name = `${product.name}-${product.variants.name}`;
-          product.productCode = product.variants.productCode;
-        }
-        return product;
-      });
+
+      this.products = products.result
+        .map((product) => {
+          if (
+            product.type === "Variants" &&
+            product.variants &&
+            product.variants.length > 0
+          ) {
+            return product.variants.map((variant) => {
+              return {
+                ...product,
+                productId: product._id,
+                name: variant.name,
+                upc: variant.upc,
+                stocks: variant.stocks,
+                _id: variant._id,
+              };
+            });
+          }
+
+          return {
+            ...product,
+            productId: product._id,
+            stocks: product.stocks,
+          };
+        })
+        .flat();
     },
   },
 };

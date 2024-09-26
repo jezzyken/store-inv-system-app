@@ -7,8 +7,7 @@ const adjustmentItemSchema = new mongoose.Schema(
       ref: "Product",
     },
     variant: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductVariant",
+      type: String
     },
     adjustment: {
       type: mongoose.Schema.Types.ObjectId,

@@ -9,16 +9,16 @@ const get = async () => {
   const result = await Models.aggregate([
     {
       $lookup: {
-        from: "stockitems",
+        from: "adjustmentitems",
         localField: "_id",
-        foreignField: "stock",
-        as: "stock",
+        foreignField: "adjustment",
+        as: "adjustment",
       },
     },
     {
       $addFields: {
         noOfItems: {
-          $size: "$stock",
+          $size: "$adjustment",
         },
       },
     },
@@ -28,10 +28,13 @@ const get = async () => {
       },
     },
   ]);
+
+  console.log(result)
   return result;
 };
 
 const getById = async (id) => {
+  console.log('getting adjustment by id')
   const result = await Models.aggregate([
     {
       $match: {
@@ -75,12 +78,6 @@ const getById = async (id) => {
       },
     },
     {
-      $unwind: {
-        path: "$variantDetails",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
       $group: {
         _id: "$_id",
         referenceNo: {
@@ -92,11 +89,11 @@ const getById = async (id) => {
         date: {
           $first: "$date",
         },
-        items: {
+        stockItems: {
           $push: {
             item_id: "$items._id",
             product: "$productDetails",
-            variant: "$variantDetails",
+            variant: "$items.variant",
             quantity: "$items.quantity",
             operation: "$items.operation",
           },
@@ -196,41 +193,37 @@ const add = async (req) => {
 
     await adjustmentItem.save();
 
-    if (itemData.variant) {
-      const variant = await ProductVariantModel.findById(itemData.variant);
-      if (variant) {
-        if (operation === "Subtraction") {
-          variant.stocks -= quantity;
-        } else {
-          variant.stocks += quantity;
-        }
+    const productData = await ProductModel.findById(itemData.product);
 
-        await variant.save();
+    if (productData.type === "Variants") {
+      const productVariant = productData.variants.find((v) =>
+        v._id.equals(itemData.variant)
+      );
 
-        const product = await ProductModel.findById(itemData.product);
-        if (product) {
-          const variants = await ProductVariantModel.find({
-            _id: { $in: product.variants },
-          });
-          product.stocks = variants.reduce((acc, v) => acc + v.stocks, 0);
-          await product.save();
+      if (productVariant) {
+        const quantityToUpdate = parseInt(quantity);
+        if (operation === "Addition") {
+          productVariant.stocks += quantityToUpdate;
+        } else if (operation === "Subtraction") {
+          productVariant.stocks -= quantityToUpdate;
         }
+      } else {
+        return res.status(404).json({ message: "Variant not found" });
       }
     } else {
-      const product = await ProductModel.findById(itemData.product);
-      if (product) {
-        if (operation === "Subtraction") {
-          product.stocks -= quantity;
-        } else {
-          product.stocks += quantity;
-        }
-
-        await product.save();
+      const quantityToUpdate = parseInt(quantity);
+      if (operation === "Addition") {
+        productData.stocks += quantityToUpdate;
+      } else if (operation === "Subtraction") {
+        productData.stocks -= quantityToUpdate;
       }
     }
+
+    await productData.save();
   }
 
   return results;
+
 };
 
 const update = async (id, data) => {
