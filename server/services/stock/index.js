@@ -32,6 +32,7 @@ const get = async () => {
 };
 
 const getById = async (id) => {
+  console.log('getting stocks')
   const result = await Models.aggregate([
     {
       $match: {
@@ -67,34 +68,6 @@ const getById = async (id) => {
       },
     },
     {
-      $lookup: {
-        from: "productvariants",
-        localField: "items.variant",
-        foreignField: "_id",
-        as: "variantDetails",
-      },
-    },
-    {
-      $unwind: {
-        path: "$variantDetails",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "suppliers",
-        localField: "items.supplier",
-        foreignField: "_id",
-        as: "supplierDetails",
-      },
-    },
-    {
-      $unwind: {
-        path: "$supplierDetails",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
       $group: {
         _id: "$_id",
         status: {
@@ -106,12 +79,11 @@ const getById = async (id) => {
         date: {
           $first: "$date",
         },
-        items: {
+        stockItems: {
           $push: {
             item_id: "$items._id",
             product: "$productDetails",
-            variant: "$variantDetails",
-            supplier: "$supplierDetails",
+            variant: "$items.variant",
             quantity: "$items.quantity",
           },
         },

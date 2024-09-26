@@ -203,60 +203,49 @@ export default {
     }),
 
     async initialize() {
-      // this.isLoading = true;
+      this.isLoading = true;
       const response = await this.getStockById(this.$route.params.id);
 
-      const { status, notes, date, items } = response.result[0];
+      const { status, notes, date, stockItems } = response.result[0];
 
-     this.items = {
-      status,
-      notes,
-      date,
-     }
+      this.items.status = status;
+      this.items.notes = notes;
+      this.items.date = moment(date).format("YYYY-MM-DD");
 
-     console.log(items)
+      for (let item of stockItems) {
+        const data = {
+          name: item.product.name,
+          quantity: item.quantity,
+          availableStocks: item.product.stocks,
+          product: item.product._id,
+          _id: item.product._id,
+          items_id: item.item_id,
+        };
 
+        if (item.product.type === "Variants") {
+          const variantInfo = item.product.variants.find(
+            (variant) => variant._id == item.variant
+          );
+          data.variant = variantInfo._id;
+          data.name = variantInfo.name;
+          data.availableStocks = variantInfo.stocks;
+        }
 
-      // this.items.status = status;
-      // this.items.notes = notes;
-      // this.items.date = moment(date).format("YYYY-MM-DD");
-
-      // for (let item of items) {
-      //   const data = {
-      //     name: item.product.name,
-      //     quantity: item.quantity,
-      //     availableStocks: item.product.stocks,
-      //     product: item.product._id,
-      //     _id: item.product._id,
-      //     items_id: item.item_id,
-      //   };
-
-      //   if (item.product.type === "Variants") {
-      //     for (let i = 0; i < item.product.variants.length; i++) {
-      //       const productVariants = item.product.variants[i];
-      //       data.variant = productVariants._id;
-      //       data.name = productVariants.name;
-      //       data.availableStocks = productVariants.stocks;
-      //       data._id = productVariants._id;
-      //     }
-      //   }
-
-      //   this.items.stocks.push(data); 
-      // }
-
-      // this.isLoading = false;
+        this.items.stocks.push(data);
+      }
+      this.isLoading = false;
     },
 
     async onSelectItem(item) {
-
       const existingItem = this.items.stocks.find(
-        (stock) => stock.product === item._id
+        (stock) => stock.product === item._id || stock.variant === item._id
       );
 
       if (!existingItem) {
         const data = {
           name: item.name,
           availableStocks: item.stocks,
+          product: item.productId,
         };
 
         if (item.type === "Variants") {
@@ -264,7 +253,6 @@ export default {
           data.name = item.name;
           data.availableStocks = item.stocks;
         }
-
 
         this.items.stocks.push({ ...data, product: item.productId });
       }
@@ -278,10 +266,8 @@ export default {
         stocks: this.items.stocks,
       };
 
-      console.log(data);
-
       await this.addItem(data);
-      // this.$router.push("/stock");
+      this.$router.push("/stock");
     },
 
     async onUpdateItem() {
@@ -338,8 +324,6 @@ export default {
           };
         })
         .flat();
-
-      console.log(this.products);
     },
   },
 };
