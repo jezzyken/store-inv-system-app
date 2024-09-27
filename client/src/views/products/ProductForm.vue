@@ -253,7 +253,7 @@ export default {
         upc: "",
         category: null,
         brand: null,
-        image: "",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOtjqFKVwZWNCqI33H1OWcsUaZYww6FLLFAw&s",
         details: "",
         type: "",
         cost: null,

@@ -11,8 +11,7 @@ const saleItemSchema = new mongoose.Schema(
       ref: "Sale",
     },
     variant: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductVariant",
+      type: String,
     },
     quantity: {
       type: Number ,

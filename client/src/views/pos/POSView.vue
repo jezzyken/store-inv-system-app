@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <v-container fluid class="fill-height">
+    <v-container fluid class="fill-height main-container" >
       <v-row no-gutters class="fill-height">
         <v-col cols="7">
           <v-card class="ma-2 fill-height d-flex flex-column">
@@ -12,7 +11,10 @@
                 @click:append="filterProducts"
               ></v-text-field>
             </v-card-title>
-            <v-card-text class="flex-grow-1 overflow-y-auto">
+            <v-card-text class="flex-grow-1 overflow-y-auto" 
+            
+            style="max-height: calc(75vh - 10px); overflow-y: auto; "
+            >
               <v-row>
                 <v-col
                   v-for="product in filteredProducts"
@@ -49,7 +51,7 @@
         <v-col cols="5">
           <v-card class="ma-2 fill-height d-flex flex-column">
             <v-card-title>Selected Products</v-card-title>
-            <v-card-text
+            <div
               v-if="cart.length > 0"
               class="flex-grow-1 overflow-y-auto"
             >
@@ -92,7 +94,7 @@
                   </tbody>
                 </template>
               </v-simple-table>
-            </v-card-text>
+            </div>
             <v-card-text v-else class="text-center">
               <v-icon size="50" color="grey lighten-1">mdi-cart-outline</v-icon>
               <p class="mt-2 grey--text">Cart is empty</p>
@@ -110,15 +112,14 @@
                 @click="openPaymentDialog"
                 :disabled="cart.length === 0"
               >
-                $ Pay Now
+                Pay
               </v-btn>
             </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
-    </v-container>
 
-    <!-- Payment Dialog -->
+          <!-- Payment Dialog -->
     <v-dialog v-model="dialog" max-width="400">
       <v-card>
         <v-card-title class="headline">Payment Details</v-card-title>
@@ -157,7 +158,10 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+
+    </v-container>
+
+
 </template>
 
 <script>
@@ -303,3 +307,17 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.app-container {
+  height: calc(100vh - 100px);
+  margin-top: -40px;
+  padding: 0;
+  background-color: red;
+}
+
+
+.main-container{
+  height: calc(100vh - 100px);
+}
+</style>
