@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-list>
-      <v-list-item class="px-2">
+      <!-- <v-list-item class="px-2">
         <v-list-item-avatar>
           <v-img
             src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?size=338&ext=jpg&ga=GA1.1.2008272138.1721001600&semt=ais_user"></v-img>
@@ -15,7 +15,20 @@
           </v-list-item-title>
           <v-list-item-subtitle>{{ user.email }}</v-list-item-subtitle>
         </v-list-item-content>
-      </v-list-item>
+      </v-list-item> -->
+
+      <v-list-item class="px-2 py-4">
+      <v-list-item-avatar size="64">
+        <v-img src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?size=338&ext=jpg&ga=GA1.1.2008272138.1721001600&semt=ais_user"></v-img>
+      </v-list-item-avatar>
+      <v-list-item-content>
+        <v-list-item-title class="text-subtitle-2 font-weight-bold">
+          {{ (userName).toUpperCase() }}
+        </v-list-item-title>
+        <v-list-item-subtitle>{{ user.email }}</v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+
     </v-list>
 
     <v-divider></v-divider>
@@ -92,7 +105,7 @@ export default {
             route: "/sale",
           },
           {
-            action: "mdi-truck-delivery",
+            action: "mdi-note-multiple",
             title: "Debts",
             appendIcon: "",
             route: "/delivery",
@@ -149,3 +162,4 @@ export default {
   },
 };
 </script>
+

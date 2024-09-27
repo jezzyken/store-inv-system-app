@@ -27,8 +27,8 @@
             </template>
             <v-date-picker v-model="items.date" no-title scrollable>
               <v-spacer></v-spacer>
-              <v-btn text color="primary" @click="menu = false"> Cancel </v-btn>
-              <v-btn text color="primary" @click="$refs.menu1.save(items.date)">
+              <v-btn text color="#000033" @click="menu = false"> Cancel </v-btn>
+              <v-btn text color="#000033" @click="$refs.menu1.save(items.date)">
                 OK
               </v-btn>
             </v-date-picker>
@@ -89,7 +89,7 @@
                 <div class="d-flex justify-center">
                   <v-btn
                     dark
-                    color="primary"
+                    color="#000033"
                     small
                     fab
                     @click="incrementQuantity(i)"
@@ -108,7 +108,7 @@
                   </div>
                   <v-btn
                     dark
-                    color="primary"
+                    color="#000033"
                     small
                     fab
                     @click="decrementQuantity(i)"
@@ -281,7 +281,7 @@ export default {
       };
       if (this.mode === "add") {
         state = {
-          color: "primary",
+          color: "#000033",
           action: this.onAddItem,
           label: "add",
         };

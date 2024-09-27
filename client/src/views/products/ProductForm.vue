@@ -143,7 +143,7 @@
                   label="New Variant Name"
                   outlined
                 ></v-text-field>
-                <v-btn @click="createVariant" color="primary"
+                <v-btn @click="createVariant" color="#000033" dark
                   >Create Variant</v-btn
                 >
               </div>
@@ -284,7 +284,7 @@ export default {
       };
       if (this.mode === "add") {
         state = {
-          color: "primary",
+          color: "#000033",
           action: this.onAddItem,
           label: "add",
         };

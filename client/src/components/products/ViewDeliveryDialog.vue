@@ -122,7 +122,7 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-btn depressed color="primary" @click="onUpdateStatus(items.status)">
+          <v-btn depressed color="#000033" @click="onUpdateStatus(items.status)">
             {{
               items.status === "pending"
                 ? "Mark as Delivered"

@@ -256,7 +256,7 @@ export default {
       };
       if (this.mode === "add") {
         state = {
-          color: "primary",
+          color: "#000033",
           action: this.onAddItem,
           label: "add",
         };

@@ -1,7 +1,7 @@
 <template>
   <!-- src="https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg" -->
 
-  <v-navigation-drawer v-model="$store.state.drawer" dark class="nav-bg" app>
+  <v-navigation-drawer v-model="$store.state.drawer" dark class="nav-bg" app >
     <DrawerListVue />
   </v-navigation-drawer>
 </template>
@@ -22,11 +22,7 @@ export default {
 
 <style scoped>
 .nav-bg {
-  background: rgb(36, 36, 79);
-  background: linear-gradient(
-    0deg,
-    rgba(36, 36, 79, 1) 5%,
-    rgba(15, 49, 196, 1) 96%
-  );
+  background: rgb(0,0,51);
+  /* background: linear-gradient(0deg, rgba(36,36,79,1) 5%, rgba(0,255,244,1) 96%); */
 }
 </style>

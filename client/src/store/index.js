@@ -20,6 +20,7 @@ export default new Vuex.Store({
   },
   mutations: {
     SET_DRAWER(state, payload) {
+      console.log(payload)
       state.drawer = payload;
     },
   },

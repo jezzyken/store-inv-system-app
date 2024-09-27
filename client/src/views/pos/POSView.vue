@@ -73,7 +73,7 @@
                     <!-- <td>{{ item.quantity }}</td> -->
                     <td>
                       <div class="d-flex justify-center">
-                        <v-btn dark color="primary" x-small fab>
+                        <v-btn dark color="#000033" x-small fab>
                           <v-icon>mdi-plus</v-icon>
                         </v-btn>
                         <div style="width: 75px" class="text-center">
@@ -85,7 +85,7 @@
                             dense
                           ></v-text-field>
                         </div>
-                        <v-btn dark color="primary" x-small fab>
+                        <v-btn dark color="#000033" x-small fab>
                           <v-icon>mdi-minus</v-icon>
                         </v-btn>
                       </div>
@@ -109,7 +109,8 @@
           </v-card-text>
           <v-card-actions>
             <v-btn
-              color="primary"
+              dark
+              color="#000033"
               block
               @click="openPaymentDialog"
               :disabled="cart.length === 0"
@@ -162,7 +163,7 @@
               <template v-slot:no-data>
                 <v-list-item>
                   <v-list-item-content>
-                    <v-btn text color="primary" @click="addNewCustomer">
+                    <v-btn text color="#000033" @click="addNewCustomer">
                       Add "{{ newCustomerName }}" to Customer List
                     </v-btn>
                   </v-list-item-content>
@@ -214,7 +215,8 @@
         <v-card-actions>
           <v-btn text @click="dialog = false">Cancel</v-btn>
           <v-btn
-            color="primary"
+            :dark="amountPaid > subTotal"
+            color="#000033"
             @click="processPayment"
             :disabled="amountPaid < subTotal"
           >
@@ -227,7 +229,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapState, mapMutations } from "vuex";
 export default {
   data() {
     return {
@@ -264,6 +266,15 @@ export default {
     },
   },
   computed: {
+    ...mapState(["drawer"]),
+    drawer: {
+      get() {
+        return false;
+      },
+      set(val) {
+        this.$store.commit("SET_DRAWER", val);
+      },
+    },
     subTotal() {
       return this.cart.reduce(
         (total, item) => total + item.price * item.quantity,
@@ -277,10 +288,20 @@ export default {
       return Math.max(0, this.amountPaid - this.subTotal).toFixed(2);
     },
   },
+  mounted(){
+  },
   created() {
+    this.drawer = false;
+    // if (this.$route.name === "pos") {
+    //   console.log('false', this.$route.name)
+    // }
+
     this.fetch();
   },
   methods: {
+    ...mapMutations({
+      setDrawer: "SET_DRAWER",
+    }),
     ...mapActions({
       getProductItems: "product/getItems",
       addItem: "sale/addItem",
@@ -345,19 +366,17 @@ export default {
         isCredit: this.paymentType === "Credit" ? true : false,
         items: this.cart,
       };
-      
-      this.cart = [];
-      await this.addItem(data);
 
-      // if (this.amountPaid >= this.subTotal) {
-      //   alert(
-      //     `Payment of ${this.amountPaid} confirmed using ${this.paymentType}`
-      //   );
-      //   this.dialog = false;
-      //   this.cart = [];
-      // } else {
-      //   alert("Insufficient amount paid!");
-      // }
+      if (this.amountPaid >= this.subTotal) {
+        await this.addItem(data);
+        alert(
+          `Payment of ${this.amountPaid} confirmed using ${this.paymentType}`
+        );
+        this.dialog = false;
+        this.cart = [];
+      } else {
+        alert("Insufficient amount paid!");
+      }
     },
 
     selectCustomer(id) {

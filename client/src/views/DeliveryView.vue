@@ -44,7 +44,7 @@
           <v-spacer></v-spacer>
           <template v-slot:activator="{ on, attrs }">
             <v-btn
-              color="primary"
+              color="#000033"
               dark
               class="mb-2"
               v-bind="attrs"
@@ -77,14 +77,8 @@
       <template v-slot:[`item.actions`]="{ item }">
         <v-menu bottom left>
           <template v-slot:activator="{ attrs, on }">
-            <v-btn
-              v-bind="attrs"
-              v-on="on"
-              class="white--text pa-3"
-              x-small
-              color="blue-grey"
-            >
-              options <v-icon right dark> mdi-chevron-down </v-icon>
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
           </template>
 
@@ -101,7 +95,7 @@
       </template>
 
       <template v-slot:no-data>
-        <v-btn color="primary" @click="initialize"> Reset </v-btn>
+        <v-btn color="#000033" @click="initialize"> Reset </v-btn>
       </template>
     </v-data-table>
   </v-container>

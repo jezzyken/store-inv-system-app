@@ -2,7 +2,7 @@
   <v-sheet
     class="pa-12 d-flex flex-column align-center justify-center"
     rounded
-    color="primary"
+    color="#000033"
     height="100vh"
   >
     <div class="text-center mb-4">

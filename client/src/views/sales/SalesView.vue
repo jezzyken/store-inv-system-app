@@ -1,161 +1,140 @@
 <template>
-  <v-data-table
-    :headers="headers"
-    :items="desserts"
-    :loading="isLoading"
-    class="elevation-1 mt-4"
-    :search="search"
-  >
-    <template v-slot:top>
-      <v-toolbar flat>
-        <div style="width: 400px">
-          <v-text-field
-            v-model="search"
-            filled
-            rounded
-            dense
-            hide-details
-            placeholder="Search"
-            append-icon="mdi-filter-variant"
-          ></v-text-field>
-        </div>
-        <v-spacer></v-spacer>
-        <v-dialog v-model="dialog" max-width="500px">
-          <template v-slot:activator="{}">
+  <v-container fluid>
+    <v-data-table
+      :headers="headers"
+      :items="desserts"
+      :loading="isLoading"
+      class="elevation-1 mt-4"
+      :search="search"
+      item-key="referenceCode"
+      :items-per-page-options="[5, 10, 20]"
+    >
+      <template v-slot:[`item.isCredit`]="{ item }">
+        <v-chip :color="!item.isCredit ? 'green' : 'red'" dark small label>
+          {{ !item.isCredit ? "Yes" : "No" }}
+        </v-chip>
+      </template>
+      <template v-slot:top>
+        <v-row align="center" justify="space-between" class="pa-4">
+          <v-col cols="12" sm="6" md="4">
+            <v-text-field
+              v-model="search"
+              filled
+              rounded
+              dense
+              clearable
+              hide-details
+              placeholder="Search"
+              prepend-inner-icon="mdi-magnify"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="auto">
             <v-btn
-              color="primary"
+              color="#000033"
               dark
               class="mb-2"
               :to="{ name: 'AddSales' }"
-              small
+              elevation="2"
+              rounded
             >
-              new
+              <v-icon left>mdi-plus</v-icon>
+              New
+            </v-btn>
+          </v-col>
+        </v-row>
+      </template>
+
+      <template v-slot:[`item.hasDelivery`]="{ item }">
+        <v-chip
+          :color="item.hasDelivery ? 'success' : 'error'"
+          small
+          label
+          text-color="white"
+        >
+          {{ item.hasDelivery ? "Yes" : "No" }}
+        </v-chip>
+      </template>
+
+      <template v-slot:[`item.actions`]="{ item }">
+        <v-menu bottom left>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
           </template>
-          <v-card>
-            <v-card-title>
-              <span class="text-h5">{{ formTitle }}</span>
-            </v-card-title>
-
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="editedItem.name"
-                      label="Name"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="editedItem.company"
-                      label="Company"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="editedItem.email"
-                      label="Email"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="editedItem.contactNo"
-                      label="Contact No"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="editedItem.address"
-                      label="Address"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="close"> Cancel </v-btn>
-              <v-btn color="blue darken-1" text @click="save"> Save </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-        <v-dialog v-model="dialogDelete" max-width="500px">
-          <v-card>
-            <v-card-title class="text-h5"
-              >Are you sure you want to delete this item?</v-card-title
+          <v-list>
+            <v-list-item
+              v-for="(action, i) in actions"
+              :key="i"
+              @click="handleAction(action.title, item)"
             >
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="closeDelete"
-                >Cancel</v-btn
-              >
-              <v-btn color="blue darken-1" text @click="deleteItemConfirm"
-                >OK</v-btn
-              >
-              <v-spacer></v-spacer>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-      </v-toolbar>
-    </template>
+              <v-list-item-title>{{ action.title }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </template>
 
-    <template v-slot:[`item.hasDelivery`]="{ item }">
-      <v-chip dark color="success" small class="mr-1">
-        {{ item.hasDelivery ? "Yes" : "No" }}
-      </v-chip>
-    </template>
+      <template v-slot:no-data>
+        <v-btn color="#000033" @click="initialize">Reset</v-btn>
+      </template>
+    </v-data-table>
 
-    <template v-slot:[`item.actions`]="{ item }">
-      <v-menu bottom left>
-        <template v-slot:activator="{ attrs, on }">
-          <v-btn
-            v-bind="attrs"
-            v-on="on"
-            class="white--text pa-3"
-            x-small
-            color="blue-grey"
-          >
-            options <v-icon right dark> mdi-chevron-down </v-icon>
-          </v-btn>
-        </template>
+    <!-- Edit Dialog -->
+    <v-dialog v-model="dialog" max-width="600px">
+      <v-card elevation="2" class="rounded-lg">
+        <v-card-title class="headline">{{ formTitle }}</v-card-title>
+        <v-card-text>
+          <v-form ref="form" v-model="valid">
+            <v-text-field
+              v-model="editedItem.name"
+              label="Name"
+              outlined
+              :rules="[(v) => !!v || 'Name is required']"
+            ></v-text-field>
+            <v-text-field
+              v-model="editedItem.company"
+              label="Company"
+              outlined
+            ></v-text-field>
+            <v-text-field
+              v-model="editedItem.email"
+              label="Email"
+              outlined
+              :rules="[(v) => /.+@.+\..+/.test(v) || 'E-mail must be valid']"
+            ></v-text-field>
+            <v-text-field
+              v-model="editedItem.contactNo"
+              label="Contact No"
+              outlined
+            ></v-text-field>
+            <v-text-field
+              v-model="editedItem.address"
+              label="Address"
+              outlined
+            ></v-text-field>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey darken-1" text @click="close">Cancel</v-btn>
+          <v-btn color="#000033" @click="save" :disabled="!valid">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-        <v-list>
-          <v-list-item
-            v-for="(action, i) in actions"
-            :key="i"
-            @click="handleAction(action.title, item)"
-          >
-            <v-list-item-title>{{ action.title }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-    </template>
-
-    <!-- <template v-slot:[`item.actions`]="{ item }">
-      <v-btn x-small color="primary" @click="onViewItem(item._id)">
-        view
-      </v-btn>
-
-      <span class="mr-1"></span>
-
-      <v-btn x-small color="error" dark @click="deleteItem(item)">
-        delete
-      </v-btn>
-    </template> -->
-    <template v-slot:no-data>
-      <v-btn color="primary" @click="initialize"> Reset </v-btn>
-    </template>
-  </v-data-table>
+    <!-- Delete Dialog -->
+    <v-dialog v-model="dialogDelete" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">Delete Item</v-card-title>
+        <v-card-text> Are you sure you want to delete this item? </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey darken-1" text @click="closeDelete">Cancel</v-btn>
+          <v-btn color="error" @click="deleteItemConfirm">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
 </template>
 
 <script>
@@ -211,6 +190,11 @@ export default {
     actions: [{ title: "Edit" }, { title: "Delete" }],
     isLoading: false,
     search: "",
+    valid: true,
+    actions: [
+      { title: "Edit", icon: "mdi-pencil" },
+      { title: "Delete", icon: "mdi-delete" },
+    ],
   }),
 
   computed: {
@@ -304,3 +288,7 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Add any custom styles here */
+</style>
