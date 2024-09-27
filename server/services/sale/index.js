@@ -3,6 +3,7 @@ const SalesItemModel = require("../../models/SalesItem");
 const ProductModel = require("../../models/Product");
 const ProductVariantModel = require("../../models/ProductVariant");
 const DeliveryModel = require("../../models/Delivery");
+const DeptModel = require("../../models/Delivery");
 
 const ObjectId = require("mongoose").Types.ObjectId;
 
@@ -33,6 +34,7 @@ const get = async () => {
 };
 
 const getById = async (id) => {
+  console.log('getting sales item', id)
   const result = await Models.aggregate([
     {
       $match: {
@@ -65,14 +67,6 @@ const getById = async (id) => {
       $unwind: {
         path: "$productDetails",
         preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "productvariants",
-        localField: "items.variant",
-        foreignField: "_id",
-        as: "variantDetails",
       },
     },
     {
@@ -121,7 +115,7 @@ const getById = async (id) => {
           $push: {
             item_id: "$items._id",
             product: "$productDetails",
-            variant: "$variantDetails",
+            variant: "$items.variant",
             quantity: "$items.quantity",
           },
         },
@@ -137,19 +131,15 @@ const getById = async (id) => {
 };
 
 const add = async (req) => {
-  const { stocks, hasDelivery, delivery } = req.body;
+  const { items, isCredit } = req.body;
+
+
 
   const sale = new Models(req.body);
 
   const savedSale = await sale.save();
 
-  if (hasDelivery) {
-    const newDelivery = new DeliveryModel(delivery);
-    newDelivery.sale = sale._id;
-    newDelivery.save();
-  }
-
-  for (const itemData of stocks) {
+  for (const itemData of items) {
     const saleItem = new SalesItemModel({
       product: itemData.product,
       variant: itemData.variant,
@@ -159,27 +149,20 @@ const add = async (req) => {
     });
     await saleItem.save();
 
-    if (itemData.variant) {
-      const variant = await ProductVariantModel.findById(itemData.variant);
-      if (variant) {
-        variant.stocks -= itemData.quantity;
-        await variant.save();
+    const quantityToSub = parseInt(itemData.quantity, 10);
 
-        const product = await ProductModel.findById(itemData.product);
-        if (product) {
-          const variants = await ProductVariantModel.find({
-            _id: { $in: product.variants },
-          });
-          product.stocks = variants.reduce((acc, v) => acc + v.stocks, 0);
-          await product.save();
+    if (itemData.variant) {
+      await ProductModel.updateOne(
+        { _id: itemData.product, "variants._id": itemData.variant },
+        {
+          $inc: { "variants.$.stocks": -quantityToSub },
         }
-      }
+      );
     } else {
-      const product = await ProductModel.findById(itemData.product);
-      if (product) {
-        product.stocks -= itemData.quantity;
-        await product.save();
-      }
+      await ProductModel.updateOne(
+        { _id: itemData.product },
+        { $inc: { stocks: -quantityToSub } }
+      );
     }
   }
 

@@ -1,126 +1,130 @@
 <template>
-    <v-container fluid class="fill-height main-container" >
-      <v-row no-gutters class="fill-height">
-        <v-col cols="7">
-          <v-card class="ma-2 fill-height d-flex flex-column">
-            <v-card-title>
-              <v-text-field
-                v-model="searchQuery"
-                label="Enter product"
-                append-icon="mdi-magnify"
-                @click:append="filterProducts"
-              ></v-text-field>
-            </v-card-title>
-            <v-card-text class="flex-grow-1 overflow-y-auto" 
-            
-            style="max-height: calc(75vh - 10px); overflow-y: auto; "
-            >
-              <v-row>
-                <v-col
-                  v-for="product in filteredProducts"
-                  :key="product.id"
-                  cols="12"
-                  sm="6"
-                  md="4"
-                  lg="3"
-                >
-                  <v-card
-                    @click="addToCart(product)"
-                    :disabled="!product.inStock"
-                  >
-                    <v-img :src="product.image" class="mx-auto" contain height="200px" ></v-img>
-                    <v-card-text>
-                      <div>{{ product.name }}</div>
-                      <div>{{ product.price.toFixed(2) }}</div>
-                    </v-card-text>
-                    <v-chip
-                      v-if="!product.inStock"
-                      color="red"
-                      text-color="white"
-                      small
-                      class="ma-2"
-                    >
-                      Stock out
-                    </v-chip>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="5">
-          <v-card class="ma-2 fill-height d-flex flex-column">
-            <v-card-title>Selected Products</v-card-title>
-            <div
-              v-if="cart.length > 0"
-              class="flex-grow-1 overflow-y-auto"
-            >
-              <v-simple-table>
-                <template v-slot:default>
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th class="text-center">Quantity</th>
-                      <th>Price</th>
-                      <th>Sub-Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="item in cart" :key="item.id">
-                      <td>{{ item.name }}</td>
-                      <!-- <td>{{ item.quantity }}</td> -->
-                      <td>
-                        <div class="d-flex justify-center">
-                          <v-btn dark color="primary" x-small fab>
-                            <v-icon>mdi-plus</v-icon>
-                          </v-btn>
-                          <div style="width: 75px" class="text-center">
-                            <v-text-field
-                              v-model="item.quantity"
-                              class="text-center mx-2"
-                              outlined
-                              hide-details
-                              dense
-                            ></v-text-field>
-                          </div>
-                          <v-btn dark color="primary" x-small fab>
-                            <v-icon>mdi-minus</v-icon>
-                          </v-btn>
-                        </div>
-                      </td>
-                      <td>{{ item.price }}</td>
-                      <td>{{ (item.price * item.quantity).toFixed(2) }}</td>
-                    </tr>
-                  </tbody>
-                </template>
-              </v-simple-table>
-            </div>
-            <v-card-text v-else class="text-center">
-              <v-icon size="50" color="grey lighten-1">mdi-cart-outline</v-icon>
-              <p class="mt-2 grey--text">Cart is empty</p>
-            </v-card-text>
-            <v-card-text v-if="cart.length > 0">
-              <div class="d-flex justify-space-between mt-2">
-                <span class="text-h6">Total:</span>
-                <span class="text-h6">{{ total }}</span>
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn
-                color="primary"
-                block
-                @click="openPaymentDialog"
-                :disabled="cart.length === 0"
+  <v-container fluid class="fill-height main-container">
+    <v-row no-gutters class="fill-height">
+      <v-col cols="7">
+        <v-card class="ma-2 fill-height d-flex flex-column">
+          <v-card-title>
+            <v-text-field
+              v-model="searchQuery"
+              label="Enter product"
+              append-icon="mdi-magnify"
+              @click:append="filterProducts"
+            ></v-text-field>
+          </v-card-title>
+          <v-card-text
+            class="flex-grow-1 overflow-y-auto"
+            style="max-height: calc(75vh - 10px); overflow-y: auto"
+          >
+            <v-row>
+              <v-col
+                v-for="product in filteredProducts"
+                :key="product.id"
+                cols="12"
+                sm="6"
+                md="4"
+                lg="3"
               >
-                Pay
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
+                <v-card
+                  @click="addToCart(product)"
+                  :disabled="!product.inStock"
+                >
+                  <v-img
+                    :src="product.image"
+                    class="mx-auto"
+                    contain
+                    height="200px"
+                  ></v-img>
+                  <v-card-text>
+                    <div>{{ product.name }}</div>
+                    <div>{{ product.price.toFixed(2) }}</div>
+                  </v-card-text>
+                  <v-chip
+                    v-if="!product.inStock"
+                    color="red"
+                    text-color="white"
+                    small
+                    class="ma-2"
+                  >
+                    Stock out
+                  </v-chip>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+      </v-col>
+      <v-col cols="5">
+        <v-card class="ma-2 fill-height d-flex flex-column">
+          <v-card-title>Selected Products</v-card-title>
+          <div v-if="cart.length > 0" class="flex-grow-1 overflow-y-auto">
+            <v-simple-table>
+              <template v-slot:default>
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th class="text-center">Quantity</th>
+                    <th>Price</th>
+                    <th>Sub-Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in cart" :key="item.id">
+                    <td>{{ item.name }}</td>
+                    <!-- <td>{{ item.quantity }}</td> -->
+                    <td>
+                      <div class="d-flex justify-center">
+                        <v-btn dark color="primary" x-small fab>
+                          <v-icon>mdi-plus</v-icon>
+                        </v-btn>
+                        <div style="width: 75px" class="text-center">
+                          <v-text-field
+                            v-model="item.quantity"
+                            class="text-center mx-2"
+                            outlined
+                            hide-details
+                            dense
+                          ></v-text-field>
+                        </div>
+                        <v-btn dark color="primary" x-small fab>
+                          <v-icon>mdi-minus</v-icon>
+                        </v-btn>
+                      </div>
+                    </td>
+                    <td>{{ item.price }}</td>
+                    <td>{{ (item.price * item.quantity).toFixed(2) }}</td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
+          </div>
+          <v-card-text v-else class="text-center">
+            <v-icon size="50" color="grey lighten-1">mdi-cart-outline</v-icon>
+            <p class="mt-2 grey--text">Cart is empty</p>
+          </v-card-text>
+          <v-card-text v-if="cart.length > 0">
+            <div class="d-flex justify-space-between mt-2">
+              <span class="text-h6">Total:</span>
+              <span class="text-h6">{{ total }}</span>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn
+              color="primary"
+              block
+              @click="openPaymentDialog"
+              :disabled="cart.length === 0"
+            >
+              Pay
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
 
-          <!-- Payment Dialog -->
-    <v-dialog v-model="dialog" max-width="400">
+    <v-dialog
+      v-model="dialog"
+      :max-width="paymentType === 'Credit' ? 600 : 400"
+    >
       <v-card>
         <v-card-title class="headline">Payment Details</v-card-title>
         <v-card-text>
@@ -134,6 +138,66 @@
             label="Payment Type"
             class="mt-3"
           ></v-select>
+
+          <v-text-field
+            v-if="paymentType === 'Gcash'"
+            v-model="referenceNo"
+            label="Gcash Reference Number"
+            class="mt-3"
+          ></v-text-field>
+
+          <div v-if="paymentType === 'Credit'">
+            <v-autocomplete
+              v-model="selectedCustomer"
+              :items="customers"
+              item-text="name"
+              item-value="id"
+              label="Search Customer"
+              class="mt-3"
+              @update:search-input="onCustomerInput"
+              @change="selectCustomer"
+              :loading="customerSearchLoading"
+              :filter="customFilter"
+            >
+              <template v-slot:no-data>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-btn text color="primary" @click="addNewCustomer">
+                      Add "{{ newCustomerName }}" to Customer List
+                    </v-btn>
+                  </v-list-item-content>
+                </v-list-item>
+              </template>
+            </v-autocomplete>
+
+            <v-text-field
+              v-if="selectedCustomer"
+              v-model="customerName"
+              label="Customer Name"
+              class="mt-3"
+              disabled
+            ></v-text-field>
+            <v-text-field
+              v-if="selectedCustomer"
+              v-model="cardNumber"
+              label="Card Number"
+              class="mt-3"
+            ></v-text-field>
+            <v-text-field
+              v-if="selectedCustomer"
+              v-model="expiryDate"
+              label="Expiry Date (MM/YY)"
+              class="mt-3"
+            ></v-text-field>
+            <v-text-field
+              v-if="selectedCustomer"
+              v-model="cvv"
+              label="CVV"
+              class="mt-3"
+              type="password"
+            ></v-text-field>
+          </div>
+
           <v-text-field
             v-model.number="amountPaid"
             label="Amount Paid"
@@ -141,6 +205,7 @@
             class="mt-3"
             @input="validateAmount"
           ></v-text-field>
+
           <div class="d-flex justify-space-between mt-3">
             <span>Change:</span>
             <span>{{ change }}</span>
@@ -158,10 +223,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    </v-container>
-
-
+  </v-container>
 </template>
 
 <script>
@@ -176,7 +238,22 @@ export default {
       dialog: false,
       paymentType: null,
       amountPaid: 0,
-      paymentTypes: ["Cash", "Credit Card", "Debit Card"],
+      paymentTypes: ["Cash", "Gcash", "Credit"],
+      // Credit card fields
+      customerName: "",
+      cardNumber: "",
+      expiryDate: "",
+      cvv: "",
+      // Customers list for search
+      referenceNo: "", // For Gcash reference number
+      customers: [
+        { id: 1, name: "John Doe" },
+        { id: 2, name: "Jane Smith" },
+        { id: 3, name: "Albert Johnson" },
+      ],
+      selectedCustomer: null,
+      newCustomerName: "",
+      customerSearchLoading: false,
     };
   },
 
@@ -206,6 +283,7 @@ export default {
   methods: {
     ...mapActions({
       getProductItems: "product/getItems",
+      addItem: "sale/addItem",
     }),
 
     filterProducts() {
@@ -258,17 +336,56 @@ export default {
         this.amountPaid = 0;
       }
     },
-    processPayment() {
-      if (this.amountPaid >= this.subTotal) {
-        alert(
-          `Payment of ${this.amountPaid} confirmed using ${this.paymentType}`
-        );
-        this.dialog = false;
-        this.cart = [];
-      } else {
-        alert("Insufficient amount paid!");
+    async processPayment() {
+      const data = {
+        paymentType: this.paymentType,
+        change: this.change,
+        salesTotal: this.total,
+        amountReceived: this.amountPaid,
+        isCredit: this.paymentType === "Credit" ? true : false,
+        items: this.cart,
+      };
+      
+      this.cart = [];
+      await this.addItem(data);
+
+      // if (this.amountPaid >= this.subTotal) {
+      //   alert(
+      //     `Payment of ${this.amountPaid} confirmed using ${this.paymentType}`
+      //   );
+      //   this.dialog = false;
+      //   this.cart = [];
+      // } else {
+      //   alert("Insufficient amount paid!");
+      // }
+    },
+
+    selectCustomer(id) {
+      console.log(this.newCustomerName);
+      const customer = this.customers.find((c) => c.id === id);
+      if (customer) {
+        this.customerName = customer.name;
       }
     },
+
+    customFilter(item, queryText, itemText) {
+      const text = itemText.toString().toLowerCase();
+      const searchText = queryText.toString().toLowerCase();
+      return text.includes(searchText);
+    },
+    addNewCustomer() {
+      const newCustomerId = this.customers.length + 1;
+      const newCustomer = { id: newCustomerId, name: this.newCustomerName };
+      this.customers.push(newCustomer);
+
+      this.selectedCustomer = newCustomerId;
+      this.customerName = newCustomer.name;
+    },
+
+    onCustomerInput(query) {
+      this.newCustomerName = query;
+    },
+
     async fetch() {
       const products = await this.getProductItems();
 
@@ -316,8 +433,7 @@ export default {
   background-color: red;
 }
 
-
-.main-container{
+.main-container {
   height: calc(100vh - 100px);
 }
 </style>

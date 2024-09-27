@@ -28,15 +28,13 @@ const saleSchema = new mongoose.Schema(
     grandTotal: {
       type: Number,
     },
-    hasDelivery: {
+    isCredit: {
       type: Boolean,
-      default: false,
-    },
-    notes: {
-      type: String,
+      default: false
     },
     customer: {
       type: String,
+      default: "Walkin"
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,

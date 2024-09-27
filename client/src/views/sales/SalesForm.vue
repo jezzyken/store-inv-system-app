@@ -41,107 +41,8 @@
             outlined
           ></v-text-field>
         </v-col>
-        <v-col cols="12">
-          <div class="d-flex">
-            <span class="align-self-center mr-3">Has Delivery:</span>
 
-            <v-radio-group
-              v-model="items.hasDelivery"
-              row
-              @change="onSelectDelivery(items.hasDelivery)"
-            >
-              <v-radio label="Yes" :value="true"></v-radio>
-              <v-radio label="No" :value="false"></v-radio>
-            </v-radio-group>
-          </div>
-        </v-col>
-
-        <div v-if="items.hasDelivery">
-          <div class="pa-5">
-            <p class="text-button">Product Information</p>
-            <v-divider class="mb-5" />
-          </div>
-          <v-row class="pa-4">
-            <v-col cols="4">
-              <v-text-field
-                v-model="items.delivery.recipientName"
-                label="Recipient Name"
-                outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="4">
-              <v-text-field
-                v-model="items.delivery.contactNo"
-                label="Contact No"
-                outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="4">
-              <v-menu
-                ref="menu2"
-                v-model="deliveryDateMenu"
-                :close-on-content-click="false"
-                :return-value.sync="items.delivery.deliveryDate"
-                transition="scale-transition"
-                offset-y
-                min-width="auto"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="items.delivery.deliveryDate"
-                    label="Delivery Date"
-                    prepend-inner-icon="mdi-calendar"
-                    readonly
-                    v-bind="attrs"
-                    v-on="on"
-                    outlined
-                  ></v-text-field>
-                </template>
-                <v-date-picker
-                  v-model="items.delivery.deliveryDate"
-                  no-title
-                  scrollable
-                >
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="deliveryDateMenu = false">
-                    Cancel
-                  </v-btn>
-                  <v-btn
-                    text
-                    color="primary"
-                    @click="$refs.menu2.save(items.delivery.deliveryDate)"
-                  >
-                    OK
-                  </v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-            <v-col cols="8">
-              <v-text-field
-                v-model="items.delivery.address"
-                label="Delivery Address"
-                outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="4">
-              <v-text-field
-                v-model="items.delivery.deliveryFee"
-                label="Delivery Fee"
-                outlined
-              ></v-text-field>
-            </v-col>
-
-            <v-col cols="12">
-              <v-text-field
-                v-model="items.delivery.notes"
-                label="Notes"
-                outlined
-              ></v-text-field>
-            </v-col>
-          </v-row>
-        </div>
-
-        <v-col cols="12">
+        <!-- <v-col cols="12">
           <div class="d-flex">
             <v-select
               v-model="items.product"
@@ -154,7 +55,7 @@
               return-object
             ></v-select>
           </div>
-        </v-col>
+        </v-col> -->
       </v-row>
     </v-sheet>
 
@@ -277,6 +178,7 @@
             v-model="items.discount"
             label="Discount"
             outlined
+            disabled
           ></v-text-field>
         </v-col>
         <v-col cols="12" md="3">
@@ -285,6 +187,7 @@
             label="Payment"
             :items="payment"
             outlined
+            disabled
           ></v-select>
         </v-col>
         <v-col cols="12" md="3">
@@ -293,6 +196,7 @@
             label="Cash"
             outlined
             @input="onAddAmount"
+            disabled
           ></v-text-field>
         </v-col>
         <v-col cols="12" md="3">
@@ -300,6 +204,7 @@
             v-model="items.change"
             label="Change"
             outlined
+            disabled
           ></v-text-field>
         </v-col>
 
@@ -446,6 +351,8 @@ export default {
 
         const sale = salesResponse.result[0];
 
+        console.log(sale);
+
         if (deliveryResponse.result.length > 0) {
           const delivery = deliveryResponse.result[0];
           if (delivery.deliveryDate) {
@@ -482,34 +389,63 @@ export default {
           }
         });
 
-        this.items.stocks = sale.items.map((item) => {
-          const baseData = {
+        for (let item of sale.items) {
+          const data = {
             name: item.product.name,
             quantity: item.quantity,
             availableStocks: item.product.stocks,
             product: item.product._id,
+            _id: item.product._id,
             items_id: item.item_id,
-            sellingPrice: item.product.sellingPrice,
+            sellingPrice: item.product.price,
             subTotal:
-              parseFloat(item.product.sellingPrice) *
-              parseInt(item.quantity || 0),
+              parseFloat(item.product.price) * parseInt(item.quantity || 0),
           };
 
           if (item.product.type === "Variants") {
-            return {
-              ...baseData,
-              variant: item.variant._id,
-              name: `${item.product.name}-${item.variant.name}`,
-              availableStocks: item.variant.stocks,
-              sellingPrice: item.variant.sellingPrice,
-              subTotal:
-                parseFloat(item.variant.sellingPrice) *
-                parseInt(item.quantity || 0),
-            };
-          }
+            const variantInfo = item.product.variants.find(
+              (variant) => variant._id == item.variant
+            );
 
-          return baseData;
-        });
+            console.log(variantInfo)
+            data.variant = variantInfo._id;
+            data.name = variantInfo.name;
+            data.availableStocks = variantInfo.stocks;
+            data.sellingPrice = variantInfo.price;
+            data.subTotal =
+              parseFloat(variantInfo.price) * parseInt(item.quantity || 0);
+          }
+          this.items.stocks.push(data);
+        }
+
+        // this.items.stocks = sale.items.map((item) => {
+        //   const baseData = {
+        //     name: item.product.name,
+        //     quantity: item.quantity,
+        //     availableStocks: item.product.stocks,
+        //     product: item.product._id,
+        //     items_id: item.item_id,
+        //     sellingPrice: item.product.sellingPrice,
+        //     subTotal:
+        //       parseFloat(item.product.sellingPrice) *
+        //       parseInt(item.quantity || 0),
+        //   };
+
+        //   if (item.product.type === "Variants") {
+        //     return {
+        //       ...baseData,
+        //       variant: item.variant._id,
+        //       name: `${item.product.name}-${item.variant.name}`,
+        //       availableStocks: item.variant.stocks,
+        //       sellingPrice: item.variant.sellingPrice,
+        //       subTotal:
+        //         parseFloat(item.variant.sellingPrice) *
+        //         parseInt(item.quantity || 0),
+        //     };
+        //   }
+
+        //   return baseData;
+        // });
       } catch (error) {
         console.error("Error initializing data:", error);
       } finally {

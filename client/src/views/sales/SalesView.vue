@@ -183,7 +183,7 @@ export default {
         text: "Sales Amount",
         align: "start",
         sortable: false,
-        value: "grandTotal",
+        value: "salesTotal",
       },
       {
         text: "Total Orders",
@@ -192,10 +192,10 @@ export default {
         value: "noOfItems",
       },
       {
-        text: "Delivery",
+        text: "Paid in Full",
         align: "start",
         sortable: false,
-        value: "hasDelivery",
+        value: "isCredit",
       },
       { text: "Actions", value: "actions", sortable: false },
     ],
