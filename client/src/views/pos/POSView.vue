@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill-height main-container">
+  <div class="main-container">
     <v-row no-gutters class="fill-height">
       <v-col cols="7">
         <v-card class="ma-2 fill-height d-flex flex-column">
@@ -104,7 +104,7 @@
           <v-card-text v-if="cart.length > 0">
             <div class="d-flex justify-space-between mt-2">
               <span class="text-h6">Total:</span>
-              <span class="text-h6">{{ total }}</span>
+              <span class="text-h5">{{ total }}</span>
             </div>
           </v-card-text>
           <v-card-actions>
@@ -129,9 +129,11 @@
       <v-card>
         <v-card-title class="headline">Payment Details</v-card-title>
         <v-card-text>
-          <div class="d-flex justify-space-between">
+          <div class="d-flex justify-space-between align-center">
             <span>Total:</span>
-            <span>{{ total }}</span>
+            <div style="background-color: green; padding: 10px" >
+              <span class="text-h6 white--text" >{{ total }}</span>
+            </div>
           </div>
           <v-select
             v-model="paymentType"
@@ -156,7 +158,6 @@
               label="Search Customer"
               class="mt-3"
               @update:search-input="onCustomerInput"
-              @change="selectCustomer"
               :loading="customerSearchLoading"
               :filter="customFilter"
             >
@@ -167,6 +168,43 @@
                       Add "{{ newCustomerName }}" to Customer List
                     </v-btn>
                   </v-list-item-content>
+                </v-list-item>
+              </template>
+
+              <template v-slot:item="{ item }">
+                <v-list-item class="d-flex align-center justify-space-between">
+                  <v-list-item-content @click="selectCustomer(item.id)">
+                    <div>
+                      <h3 class="text-h6">{{ item.name }}</h3>
+                      <p class="text-caption green--text font-weight-bold">Balance: 420</p>
+                    </div>
+                  </v-list-item-content>
+
+                  <v-list-item-action>
+                    <v-row no-gutters align="center" justify="end">
+                      <v-col cols="auto">
+                        <v-btn
+                          dark
+                          color="#000033"
+                          x-small
+                          @click="selectCustomer(item.id)"
+                          class="mr-1"
+                        >
+                          Select
+                        </v-btn>
+                      </v-col>
+                      <v-col cols="auto">
+                        <v-btn
+                          dark
+                          color="#000033"
+                          x-small
+                          @click="goToCustomerDetail(item.id)"
+                        >
+                          View
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-list-item-action>
                 </v-list-item>
               </template>
             </v-autocomplete>
@@ -180,22 +218,9 @@
             ></v-text-field>
             <v-text-field
               v-if="selectedCustomer"
-              v-model="cardNumber"
-              label="Card Number"
+              v-model="contactNo"
+              label="Contact No"
               class="mt-3"
-            ></v-text-field>
-            <v-text-field
-              v-if="selectedCustomer"
-              v-model="expiryDate"
-              label="Expiry Date (MM/YY)"
-              class="mt-3"
-            ></v-text-field>
-            <v-text-field
-              v-if="selectedCustomer"
-              v-model="cvv"
-              label="CVV"
-              class="mt-3"
-              type="password"
             ></v-text-field>
           </div>
 
@@ -225,7 +250,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -243,7 +268,7 @@ export default {
       paymentTypes: ["Cash", "Gcash", "Credit"],
       // Credit card fields
       customerName: "",
-      cardNumber: "",
+      contactNo: "",
       expiryDate: "",
       cvv: "",
       // Customers list for search
@@ -288,8 +313,7 @@ export default {
       return Math.max(0, this.amountPaid - this.subTotal).toFixed(2);
     },
   },
-  mounted(){
-  },
+  mounted() {},
   created() {
     this.drawer = false;
     // if (this.$route.name === "pos") {
@@ -380,7 +404,7 @@ export default {
     },
 
     selectCustomer(id) {
-      console.log(this.newCustomerName);
+      this.selectedCustomer = id
       const customer = this.customers.find((c) => c.id === id);
       if (customer) {
         this.customerName = customer.name;
@@ -453,6 +477,6 @@ export default {
 }
 
 .main-container {
-  height: calc(100vh - 100px);
+  margin: 0;
 }
 </style>

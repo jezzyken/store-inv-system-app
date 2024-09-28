@@ -19,7 +19,7 @@
 
       <v-list-item class="px-2 py-4">
       <v-list-item-avatar size="64">
-        <v-img src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?size=338&ext=jpg&ga=GA1.1.2008272138.1721001600&semt=ais_user"></v-img>
+        <v-img src="https://cdn.myanimelist.net/r/200x268/images/voiceactors/2/73659.jpg?s=20b62556680c5751919ba6d4bf20b3fc"></v-img>
       </v-list-item-avatar>
       <v-list-item-content>
         <v-list-item-title class="text-subtitle-2 font-weight-bold">
