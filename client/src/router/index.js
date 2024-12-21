@@ -113,10 +113,15 @@ const routes = [
 
       // ----delivery----
       {
-        path: "/delivery",
-        name: "delivery",
-        component: () => import("@/views/DeliveryView"),
+        path: "/debtors",
+        name: "debtors",
+        component: () => import("@/views/contacts/DebtorView"),
         meta: { requiresAuth: true },
+      },
+      {
+        path: '/debtors/:id',
+        name: 'debtorProfile',
+        component: () => import('@/views/contacts/DebtorProfile.vue')
       },
       // ----end of delivery----
 
@@ -185,15 +190,14 @@ const routes = [
       },
       // ----end of sales----
 
-       // ----POS----
-       {
+      // ----POS----
+      {
         path: "/pos",
         name: "pos",
         component: () => import("@/views/pos/POSView"),
         meta: { requiresAuth: true },
       },
       // ----end of POS----
-
     ],
   },
   {

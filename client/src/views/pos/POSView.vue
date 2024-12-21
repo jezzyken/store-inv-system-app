@@ -1,19 +1,44 @@
 <template>
   <div class="main-container">
     <v-row no-gutters class="fill-height">
+      <!-- Products Section -->
       <v-col cols="7">
         <v-card class="ma-2 fill-height d-flex flex-column">
-          <v-card-title>
+          <!-- Search Header -->
+          <v-card-title class="py-2">
             <v-text-field
               v-model="searchQuery"
-              label="Enter product"
-              append-icon="mdi-magnify"
-              @click:append="filterProducts"
+              label="Search products..."
+              prepend-inner-icon="mdi-magnify"
+              clearable
+              dense
+              outlined
+              hide-details
+              @click:clear="clearSearch"
             ></v-text-field>
           </v-card-title>
+
+          <!-- Categories -->
+          <v-chip-group
+            v-model="selectedCategory"
+            active-class="primary--text"
+            class="px-4"
+            mandatory
+          >
+            <v-chip
+              v-for="category in categories"
+              :key="category"
+              filter
+              outlined
+            >
+              {{ category }}
+            </v-chip>
+          </v-chip-group>
+
+          <!-- Products Grid -->
           <v-card-text
             class="flex-grow-1 overflow-y-auto"
-            style="max-height: calc(75vh - 10px); overflow-y: auto"
+            style="max-height: calc(75vh - 10px)"
           >
             <v-row>
               <v-col
@@ -24,274 +49,545 @@
                 md="4"
                 lg="3"
               >
-                <v-card
-                  @click="addToCart(product)"
-                  :disabled="!product.inStock"
-                >
-                  <v-img
-                    :src="product.image"
-                    class="mx-auto"
-                    contain
-                    height="200px"
-                  ></v-img>
-                  <v-card-text>
-                    <div>{{ product.name }}</div>
-                    <div>{{ product.price.toFixed(2) }}</div>
-                  </v-card-text>
-                  <v-chip
-                    v-if="!product.inStock"
-                    color="red"
-                    text-color="white"
-                    small
-                    class="ma-2"
+                <v-hover v-slot="{ hover }">
+                  <v-card
+                    class="product-card"
+                    @click="addToCart(product)"
+                    :disabled="!product.inStock"
+                    :elevation="hover ? 8 : 2"
+                    :class="{ 'on-hover': hover }"
                   >
-                    Stock out
-                  </v-chip>
-                </v-card>
+                    <v-img
+                      :src="product.image"
+                      class="mx-auto"
+                      contain
+                      height="200px"
+                      :class="{ greyscale: !product.inStock }"
+                    >
+                      <template v-slot:placeholder>
+                        <v-row
+                          class="fill-height ma-0"
+                          align="center"
+                          justify="center"
+                        >
+                          <v-progress-circular
+                            indeterminate
+                            color="grey lighten-2"
+                          ></v-progress-circular>
+                        </v-row>
+                      </template>
+                    </v-img>
+
+                    <v-card-text class="pb-0">
+                      <div
+                        class="text-subtitle-1 font-weight-medium text-truncate"
+                      >
+                        {{ product.name }}
+                      </div>
+                      <div class="d-flex justify-space-between align-center">
+                        <span class="text-h6 primary--text"
+                          >₱{{ product.price.toFixed(2) }}</span
+                        >
+                        <span class="caption grey--text"
+                          >Stock: {{ product.inStock }}</span
+                        >
+                      </div>
+                    </v-card-text>
+
+                    <v-chip
+                      v-if="!product.inStock"
+                      color="red"
+                      text-color="white"
+                      small
+                      class="ma-2"
+                    >
+                      Out of Stock
+                    </v-chip>
+                  </v-card>
+                </v-hover>
               </v-col>
             </v-row>
           </v-card-text>
         </v-card>
       </v-col>
+
+      <!-- Cart Section -->
       <v-col cols="5">
         <v-card class="ma-2 fill-height d-flex flex-column">
-          <v-card-title>Selected Products</v-card-title>
-          <div v-if="cart.length > 0" class="flex-grow-1 overflow-y-auto">
-            <v-simple-table>
-              <template v-slot:default>
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th class="text-center">Quantity</th>
-                    <th>Price</th>
-                    <th>Sub-Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in cart" :key="item.id">
-                    <td>{{ item.name }}</td>
-                    <!-- <td>{{ item.quantity }}</td> -->
-                    <td>
-                      <div class="d-flex justify-center">
-                        <v-btn dark color="#000033" x-small fab>
-                          <v-icon>mdi-plus</v-icon>
-                        </v-btn>
-                        <div style="width: 75px" class="text-center">
-                          <v-text-field
-                            v-model="item.quantity"
-                            class="text-center mx-2"
-                            outlined
-                            hide-details
-                            dense
-                          ></v-text-field>
-                        </div>
-                        <v-btn dark color="#000033" x-small fab>
-                          <v-icon>mdi-minus</v-icon>
-                        </v-btn>
-                      </div>
-                    </td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ (item.price * item.quantity).toFixed(2) }}</td>
-                  </tr>
-                </tbody>
+          <!-- Debtor Search Section -->
+          <v-card-title class="py-2">
+            <v-autocomplete
+              v-model="selectedDebtor"
+              :items="debtors"
+              item-text="name"
+              item-value="_id"
+              label="Search Debtor"
+              dense
+              outlined
+              hide-details
+              clearable
+              :loading="debtorSearchLoading"
+              :filter="customFilter"
+              return-object
+            >
+              <template v-slot:prepend-inner>
+                <v-icon small>mdi-account-search</v-icon>
               </template>
-            </v-simple-table>
-          </div>
-          <v-card-text v-else class="text-center">
-            <v-icon size="50" color="grey lighten-1">mdi-cart-outline</v-icon>
-            <p class="mt-2 grey--text">Cart is empty</p>
-          </v-card-text>
-          <v-card-text v-if="cart.length > 0">
-            <div class="d-flex justify-space-between mt-2">
-              <span class="text-h6">Total:</span>
-              <span class="text-h5">{{ total }}</span>
+
+              <template v-slot:item="{ item }">
+                <v-list-item-content>
+                  <v-list-item-title>{{ item.name }}</v-list-item-title>
+                  <v-list-item-subtitle class="d-flex align-center">
+                    <span class="caption"
+                      >Credit Limit: ₱{{ item.creditLimit }}</span
+                    >
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+              </template>
+
+              <template v-slot:no-data>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title>No debtors found</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </template>
+            </v-autocomplete>
+          </v-card-title>
+
+          <!-- Selected Debtor Info -->
+          <v-card-text v-if="selectedDebtor" class="py-2 grey lighten-4">
+            <div class="d-flex justify-space-between align-center">
+              <div>
+                <div class="subtitle-1 font-weight-medium">
+                  {{ selectedDebtor.name }}
+                </div>
+                <div class="caption">
+                  Credit Limit: ₱{{ selectedDebtor.creditLimit }}
+                </div>
+              </div>
+              <div>
+                <v-btn text small color="red" @click="selectedDebtor = null">
+                  Clear
+                </v-btn>
+              </div>
             </div>
           </v-card-text>
-          <v-card-actions>
+
+          <!-- Cart Title -->
+          <v-card-title class="py-2 d-flex justify-space-between">
+            <span>Orders</span>
+            <v-btn v-if="cart.length" text small color="red" @click="clearCart">
+              Clear Cart
+            </v-btn>
+          </v-card-title>
+
+          <!-- Cart Items -->
+          <div v-if="cart.length > 0" class="flex-grow-1 overflow-y-auto px-2">
+            <v-data-table
+              :headers="cartHeaders"
+              :items="cart"
+              hide-default-footer
+              dense
+              class="elevation-1"
+            >
+              <template v-slot:item="{ item }">
+                <tr>
+                  <td>
+                    <div class="d-flex align-center">
+                      <v-avatar size="32" class="mr-2">
+                        <v-img :src="item.image"></v-img>
+                      </v-avatar>
+                      <div class="text-truncate">{{ item.name }}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <v-row align="center" justify="center" no-gutters>
+                      <v-btn
+                        icon
+                        small
+                        :disabled="item.quantity <= 1"
+                        @click="decrementQuantity(item)"
+                      >
+                        <v-icon small>mdi-minus</v-icon>
+                      </v-btn>
+                      <span class="mx-2">{{ item.quantity }}</span>
+                      <v-btn
+                        icon
+                        small
+                        :disabled="item.quantity >= item.availableStocks"
+                        @click="incrementQuantity(item)"
+                      >
+                        <v-icon small>mdi-plus</v-icon>
+                      </v-btn>
+                    </v-row>
+                  </td>
+                  <td class="text-right">₱{{ item.price }}</td>
+                  <td class="text-right">
+                    ₱{{ (item.price * item.quantity).toFixed(2) }}
+                  </td>
+                  <td>
+                    <v-btn icon small color="red" @click="removeFromCart(item)">
+                      <v-icon small>mdi-delete</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+              </template>
+            </v-data-table>
+          </div>
+          <!-- Empty Cart State -->
+          <v-card-text v-else class="cart-empty">
+            <v-icon size="64" color="grey lighten-1">mdi-cart-outline</v-icon>
+            <p class="mt-2 grey--text text-center">
+              Your cart is empty<br />
+              Add items to get started
+            </p>
+          </v-card-text>
+
+          <!-- Cart Summary -->
+          <v-card-text v-if="cart.length > 0" class="pt-0">
+            <v-divider class="my-2"></v-divider>
+            <div class="d-flex justify-space-between mb-1">
+              <span class="text-subtitle-1">Subtotal:</span>
+              <span class="text-subtitle-1">₱{{ subTotal.toFixed(2) }}</span>
+            </div>
+            <div class="d-flex justify-space-between">
+              <span class="text-h6">Total:</span>
+              <span class="text-h6 primary--text">₱{{ total }}</span>
+            </div>
+          </v-card-text>
+
+          <!-- Payment Button -->
+          <v-card-actions class="pa-4 pt-0">
             <v-btn
               dark
-              color="#000033"
+              color="primary"
               block
+              x-large
               @click="openPaymentDialog"
               :disabled="cart.length === 0"
             >
-              Pay
+              <v-icon left>mdi-cash-register</v-icon>
+              Proceed to Payment
             </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
 
-    <v-dialog
-      v-model="dialog"
-      :max-width="paymentType === 'Credit' ? 600 : 400"
-    >
+    <!-- New Customer Dialog -->
+    <v-dialog v-model="newCustomerDialog" max-width="400">
       <v-card>
-        <v-card-title class="headline">Payment Details</v-card-title>
-        <v-card-text>
-          <div class="d-flex justify-space-between align-center">
-            <span>Total:</span>
-            <div style="background-color: green; padding: 10px" >
-              <span class="text-h6 white--text" >{{ total }}</span>
-            </div>
-          </div>
-          <v-select
-            v-model="paymentType"
-            :items="paymentTypes"
-            label="Payment Type"
-            class="mt-3"
-          ></v-select>
-
-          <v-text-field
-            v-if="paymentType === 'Gcash'"
-            v-model="referenceNo"
-            label="Gcash Reference Number"
-            class="mt-3"
-          ></v-text-field>
-
-          <div v-if="paymentType === 'Credit'">
-            <v-autocomplete
-              v-model="selectedCustomer"
-              :items="customers"
-              item-text="name"
-              item-value="id"
-              label="Search Customer"
-              class="mt-3"
-              @update:search-input="onCustomerInput"
-              :loading="customerSearchLoading"
-              :filter="customFilter"
-            >
-              <template v-slot:no-data>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-btn text color="#000033" @click="addNewCustomer">
-                      Add "{{ newCustomerName }}" to Customer List
-                    </v-btn>
-                  </v-list-item-content>
-                </v-list-item>
-              </template>
-
-              <template v-slot:item="{ item }">
-                <v-list-item class="d-flex align-center justify-space-between">
-                  <v-list-item-content @click="selectCustomer(item.id)">
-                    <div>
-                      <h3 class="text-h6">{{ item.name }}</h3>
-                      <p class="text-caption green--text font-weight-bold">Balance: 420</p>
-                    </div>
-                  </v-list-item-content>
-
-                  <v-list-item-action>
-                    <v-row no-gutters align="center" justify="end">
-                      <v-col cols="auto">
-                        <v-btn
-                          dark
-                          color="#000033"
-                          x-small
-                          @click="selectCustomer(item.id)"
-                          class="mr-1"
-                        >
-                          Select
-                        </v-btn>
-                      </v-col>
-                      <v-col cols="auto">
-                        <v-btn
-                          dark
-                          color="#000033"
-                          x-small
-                          @click="goToCustomerDetail(item.id)"
-                        >
-                          View
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                  </v-list-item-action>
-                </v-list-item>
-              </template>
-            </v-autocomplete>
-
+        <v-card-title class="primary white--text">
+          Add New Customer
+        </v-card-title>
+        <v-card-text class="pt-4">
+          <v-form ref="customerForm" v-model="isCustomerFormValid">
             <v-text-field
-              v-if="selectedCustomer"
-              v-model="customerName"
+              v-model="newCustomer.name"
               label="Customer Name"
-              class="mt-3"
-              disabled
+              outlined
+              dense
+              :rules="[(v) => !!v || 'Name is required']"
             ></v-text-field>
             <v-text-field
-              v-if="selectedCustomer"
-              v-model="contactNo"
-              label="Contact No"
-              class="mt-3"
+              v-model="newCustomer.contact"
+              label="Contact Number"
+              outlined
+              dense
+              :rules="[(v) => !!v || 'Contact number is required']"
             ></v-text-field>
-          </div>
-
-          <v-text-field
-            v-model.number="amountPaid"
-            label="Amount Paid"
-            type="number"
-            class="mt-3"
-            @input="validateAmount"
-          ></v-text-field>
-
-          <div class="d-flex justify-space-between mt-3">
-            <span>Change:</span>
-            <span>{{ change }}</span>
-          </div>
+            <v-text-field
+              v-model="newCustomer.address"
+              label="Address"
+              outlined
+              dense
+              :rules="[(v) => !!v || 'Address is required']"
+            ></v-text-field>
+          </v-form>
         </v-card-text>
         <v-card-actions>
-          <v-btn text @click="dialog = false">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn text @click="newCustomerDialog = false">Cancel</v-btn>
           <v-btn
-            :dark="amountPaid > subTotal"
-            color="#000033"
-            @click="processPayment"
-            :disabled="amountPaid < subTotal"
+            color="primary"
+            @click="addNewCustomer"
+            :disabled="!isCustomerFormValid"
           >
-            Confirm Payment
+            Add Customer
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Payment Dialog -->
+    <v-dialog v-model="dialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title class="primary white--text">
+          Payment Details
+          <v-spacer></v-spacer>
+          <v-btn icon dark @click="dialog = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="pt-4">
+          <div class="payment-summary mb-4">
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-subtitle-1">Total Amount:</span>
+              <div class="success pa-2 rounded">
+                <span class="text-h6 white--text">₱{{ total }}</span>
+              </div>
+            </div>
+          </div>
+
+          <v-tabs v-model="paymentTab" grow>
+            <v-tab
+              v-for="type in paymentTypes"
+              :key="type"
+              :disabled="type === 'Credit' && !selectedDebtor"
+            >
+              <v-icon left>{{ getPaymentIcon(type) }}</v-icon>
+              {{ type }}
+            </v-tab>
+          </v-tabs>
+
+          <v-tabs-items v-model="paymentTab" class="mt-4">
+            <!-- Cash Payment -->
+            <v-tab-item>
+              <v-text-field
+                v-model="customer"
+                label="Customer Name"
+                outlined
+                :placeholder="'Walk-in'"
+                class="mb-3"
+              ></v-text-field>
+              <v-text-field
+                v-model.number="amountPaid"
+                label="Amount Tendered"
+                prefix="₱"
+                type="number"
+                outlined
+                @input="validateAmount"
+                :error-messages="amountError"
+              ></v-text-field>
+            </v-tab-item>
+
+            <!-- GCash Payment -->
+            <v-tab-item>
+              <v-text-field
+                v-model="customer"
+                label="Customer Name"
+                outlined
+                :placeholder="'Walk-in'"
+                class="mb-3"
+              ></v-text-field>
+              <v-text-field
+                v-model="referenceNo"
+                label="GCash Reference Number"
+                outlined
+                :rules="[(v) => !!v || 'Reference number is required']"
+              ></v-text-field>
+              <v-text-field
+                v-model.number="amountPaid"
+                label="Amount Paid"
+                prefix="₱"
+                type="number"
+                outlined
+                @input="validateAmount"
+              ></v-text-field>
+            </v-tab-item>
+
+            <!-- Credit Payment Tab -->
+            <v-tab-item>
+              <v-alert
+                v-if="selectedDebtor"
+                :type="debtorCreditAvailable ? 'success' : 'warning'"
+                dense
+                outlined
+                class="mb-3"
+              >
+                <div class="d-flex justify-space-between">
+                  <span>Credit Limit:</span>
+                  <span>₱{{ selectedDebtor.creditLimit.toFixed(2) }}</span>
+                </div>
+              </v-alert>
+
+              <div v-if="!selectedDebtor" class="text-center pa-4">
+                <v-icon large color="warning">mdi-alert</v-icon>
+                <p class="mt-2">
+                  Please select a debtor to proceed with credit payment
+                </p>
+              </div>
+
+              <v-text-field
+                v-if="selectedDebtor"
+                :value="selectedDebtor.name"
+                label="Debtor Name"
+                outlined
+                readonly
+              ></v-text-field>
+
+              <v-text-field
+                v-if="selectedDebtor"
+                :value="selectedDebtor.contact"
+                label="Contact"
+                outlined
+                readonly
+              ></v-text-field>
+            </v-tab-item>
+          </v-tabs-items>
+
+          <v-divider class="my-4"></v-divider>
+          <div class="payment-summary">
+            <div class="d-flex justify-space-between mb-2">
+              <span class="text-subtitle-1">Amount Due:</span>
+              <span class="text-subtitle-1">₱{{ total }}</span>
+            </div>
+            <div
+              class="d-flex justify-space-between mb-2"
+              v-if="paymentTypes[paymentTab] !== 'Credit'"
+            >
+              <span class="text-subtitle-1">Amount Tendered:</span>
+              <span class="text-subtitle-1">₱{{ amountPaid.toFixed(2) }}</span>
+            </div>
+            <div
+              class="d-flex justify-space-between"
+              v-if="paymentTypes[paymentTab] !== 'Credit'"
+            >
+              <span class="text-h6">Change:</span>
+              <span class="text-h6" :class="{ 'success--text': change > 0 }">
+                ₱{{ change }}
+              </span>
+            </div>
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-btn text @click="dialog = false">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            :dark="isPaymentValid"
+            @click="processPayment"
+            :disabled="!isPaymentValid"
+            :loading="processingPayment"
+          >
+            Complete Payment
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar for notifications -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+    >
+      {{ snackbar.text }}
+      <template v-slot:action="{ attrs }">
+        <v-btn text v-bind="attrs" @click="snackbar.show = false">
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
 <script>
+/* eslint-disable no-unused-vars */
 import { mapActions, mapState, mapMutations } from "vuex";
+
 export default {
+  name: "POS",
+
   data() {
     return {
+      // Search and filtering
       searchQuery: "",
-      cart: [],
+      selectedCategory: 0,
+      categories: ["All", "Food", "Beverages", "Snacks", "Others"],
+
+      // Products and cart
       products: [],
       filteredProducts: [],
+      cart: [],
+
+      // Payment related
       dialog: false,
+      paymentTab: 0,
       paymentType: null,
       amountPaid: 0,
+      amountError: "",
       paymentTypes: ["Cash", "Gcash", "Credit"],
-      // Credit card fields
-      customerName: "",
-      contactNo: "",
-      expiryDate: "",
-      cvv: "",
-      // Customers list for search
-      referenceNo: "", // For Gcash reference number
-      customers: [
-        { id: 1, name: "John Doe" },
-        { id: 2, name: "Jane Smith" },
-        { id: 3, name: "Albert Johnson" },
-      ],
+      referenceNo: "",
+      processingPayment: false,
+
+      // Customer related
       selectedCustomer: null,
-      newCustomerName: "",
       customerSearchLoading: false,
+      newCustomerDialog: false,
+      isCustomerFormValid: false,
+      customer: "Walk-in",
+      newCustomer: {
+        name: "",
+        contact: "",
+        address: "",
+      },
+
+      selectedDebtor: null,
+      debtorSearchLoading: false,
+      debtors: [],
+
+      customers: [
+        {
+          id: 1,
+          name: "John Doe",
+          balance: 420,
+          contact: "09123456789",
+          address: "123 Main St.",
+          creditLimit: 5000,
+        },
+        {
+          id: 2,
+          name: "Jane Smith",
+          balance: 1500,
+          contact: "09187654321",
+          address: "456 Oak Ave.",
+          creditLimit: 10000,
+        },
+        {
+          id: 3,
+          name: "Albert Johnson",
+          balance: 0,
+          contact: "09199999999",
+          address: "789 Pine St.",
+          creditLimit: 3000,
+        },
+      ],
+
+      // UI elements
+      cartHeaders: [
+        { text: "Product", value: "name", width: "40%" },
+        { text: "Qty", value: "quantity", align: "center", width: "20%" },
+        { text: "Price", value: "price", align: "right", width: "15%" },
+        { text: "Total", value: "total", align: "right", width: "15%" },
+        { text: "Actions", value: "actions", align: "center", width: "10%" },
+      ],
+
+      snackbar: {
+        show: false,
+        text: "",
+        color: "success",
+        timeout: 3000,
+      },
     };
   },
 
-  watch: {
-    searchQuery: {
-      handler: "filterProducts",
-      immediate: true,
-    },
-  },
   computed: {
     ...mapState(["drawer"]),
+
     drawer: {
       get() {
         return false;
@@ -300,183 +596,553 @@ export default {
         this.$store.commit("SET_DRAWER", val);
       },
     },
+
     subTotal() {
       return this.cart.reduce(
         (total, item) => total + item.price * item.quantity,
         0
       );
     },
+
     total() {
       return this.subTotal.toFixed(2);
     },
+
     change() {
       return Math.max(0, this.amountPaid - this.subTotal).toFixed(2);
     },
+
+    isPaymentValid() {
+      switch (this.paymentTypes[this.paymentTab]) {
+        case "Cash":
+          return this.amountPaid >= this.subTotal;
+        case "Gcash":
+          return (
+            this.amountPaid >= this.subTotal && this.referenceNo.length > 0
+          );
+        case "Credit":
+          return this.selectedDebtor && this.debtorCreditAvailable;
+        default:
+          return false;
+      }
+    },
+
+    debtorCreditAvailable() {
+      if (!this.selectedDebtor) return false;
+      const availableCredit = this.selectedDebtor.creditLimit;
+      return availableCredit >= this.subTotal;
+    },
   },
-  mounted() {},
+
+  watch: {
+    searchQuery: {
+      handler: "filterProducts",
+      immediate: true,
+    },
+
+    selectedCategory: {
+      handler: "filterProducts",
+      immediate: true,
+    },
+
+    paymentTab(newVal) {
+      this.paymentType = this.paymentTypes[newVal];
+      this.resetPaymentForm();
+    },
+
+    dialog(newVal) {
+      if (!newVal) {
+        this.resetPaymentForm();
+      }
+    },
+  },
+
   created() {
     this.drawer = false;
-    // if (this.$route.name === "pos") {
-    //   console.log('false', this.$route.name)
-    // }
-
-    this.fetch();
+    this.fetchInitialData();
+    this.fetchDebtors();
   },
+
   methods: {
     ...mapMutations({
       setDrawer: "SET_DRAWER",
     }),
+
     ...mapActions({
       getProductItems: "product/getItems",
       addItem: "sale/addItem",
+      getDebtorItems: "debtor/getDebtors",
     }),
 
+    // UI Helpers
+    showNotification(text, color = "success") {
+      this.snackbar = {
+        show: true,
+        text,
+        color,
+        timeout: 3000,
+      };
+    },
+
+    getPaymentIcon(type) {
+      const icons = {
+        Cash: "mdi-cash",
+        Gcash: "mdi-cellphone",
+        Credit: "mdi-credit-card",
+      };
+      return icons[type] || "mdi-help";
+    },
+    // Product and Filtering Methods
+    async fetchInitialData() {
+      try {
+        await this.fetch();
+        this.showNotification("Products loaded successfully");
+      } catch (error) {
+        this.showNotification("Error loading products", "error");
+      }
+    },
+
     filterProducts() {
-      if (!this.searchQuery) {
-        this.filteredProducts = this.products;
-      } else {
+      let filtered = [...this.products];
+
+      if (this.selectedCategory > 0) {
+        const category = this.categories[this.selectedCategory];
+        filtered = filtered.filter((product) => product.category === category);
+      }
+
+      if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
-        this.filteredProducts = this.products.filter(
+        filtered = filtered.filter(
           (product) =>
             product.name.toLowerCase().includes(query) ||
             product.upc?.toLowerCase().includes(query)
         );
       }
+
+      this.filteredProducts = filtered;
     },
+
+    clearSearch() {
+      this.searchQuery = "";
+    },
+
+    // Cart Methods
     addToCart(item) {
+      if (!item.inStock) {
+        this.showNotification("Product is out of stock", "error");
+        return;
+      }
+
       const existingItem = this.cart.find(
-        (stock) => stock.product === item._id || stock.variant === item._id
+        (cartItem) =>
+          cartItem.product === item._id || cartItem.variant === item._id
       );
 
       if (existingItem) {
         if (existingItem.quantity < existingItem.availableStocks) {
           existingItem.quantity++;
+          this.showNotification(`${item.name} quantity increased`);
         } else {
-          alert("Sorry, no more stocks available!");
+          this.showNotification("Maximum stock limit reached", "warning");
         }
       } else {
         const data = {
           name: item.name,
           availableStocks: item.stocks,
           product: item.productId,
-          price: item.price.toFixed(2),
+          price: parseFloat(item.price),
+          quantity: 1,
+          image: item.image,
+          variant: item.type === "Variants" ? item._id : null,
         };
 
-        if (item.type === "Variants") {
-          data.variant = item._id;
-          data.name = item.name;
-          data.availableStocks = item.stocks;
+        this.cart.push(data);
+        this.showNotification(`${item.name} added to cart`);
+      }
+    },
+
+    incrementQuantity(item) {
+      if (item.quantity < item.availableStocks) {
+        item.quantity++;
+      } else {
+        this.showNotification("Maximum stock limit reached", "warning");
+      }
+    },
+
+    decrementQuantity(item) {
+      if (item.quantity > 1) {
+        item.quantity--;
+      }
+    },
+
+    removeFromCart(item) {
+      const index = this.cart.indexOf(item);
+      if (index > -1) {
+        this.cart.splice(index, 1);
+        this.showNotification(`${item.name} removed from cart`);
+      }
+    },
+
+    clearCart() {
+      this.cart = [];
+      this.selectedDebtor = null;
+      this.showNotification("Cart cleared");
+    },
+
+    // Customer Methods
+    customFilter(item, queryText) {
+      const searchText = queryText.toLowerCase();
+      return (
+        item.name.toLowerCase().includes(searchText) ||
+        item.contact?.includes(searchText)
+      );
+    },
+
+    async searchCustomers(query) {
+      this.customerSearchLoading = true;
+      try {
+        // Simulate API delay
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        // In real implementation, make API call here
+      } finally {
+        this.customerSearchLoading = false;
+      }
+    },
+
+    openNewCustomerDialog() {
+      this.newCustomerDialog = true;
+      this.$nextTick(() => {
+        if (this.$refs.customerForm) {
+          this.$refs.customerForm.reset();
+        }
+      });
+    },
+
+    async addNewCustomer() {
+      if (!this.isCustomerFormValid) return;
+
+      try {
+        const newCustomer = {
+          id: this.customers.length + 1,
+          name: this.newCustomer.name,
+          contact: this.newCustomer.contact,
+          address: this.newCustomer.address,
+          balance: 0,
+          creditLimit: 5000, // Default credit limit
+        };
+
+        this.customers.push(newCustomer);
+        this.selectedCustomer = newCustomer;
+        this.newCustomerDialog = false;
+        this.newCustomer = { name: "", contact: "", address: "" };
+        this.showNotification("Customer added successfully");
+      } catch (error) {
+        this.showNotification("Error adding customer", "error");
+      }
+    },
+
+    viewCustomerDetails() {
+      if (this.selectedCustomer) {
+        this.$router.push(`/customers/${this.selectedCustomer.id}`);
+      }
+    },
+
+    openPaymentDialog() {
+      if (this.cart.length === 0) {
+        this.showNotification("Cart is empty", "error");
+        return;
+      }
+
+      if (
+        this.paymentTypes[this.paymentTab] === "Credit" &&
+        !this.selectedDebtor
+      ) {
+        this.showNotification(
+          "Please select a debtor for credit payment",
+          "warning"
+        );
+        return;
+      }
+
+      this.dialog = true;
+      this.paymentTab = 0;
+      this.resetPaymentForm();
+    },
+
+    validateAmount(amount) {
+      if (amount < 0) {
+        this.amountError = "Amount cannot be negative";
+      } else if (amount < this.subTotal) {
+        this.amountError = "Amount is insufficient";
+      } else {
+        this.amountError = "";
+      }
+    },
+
+    resetPaymentForm() {
+      this.amountPaid = 0;
+      this.amountError = "";
+      this.referenceNo = "";
+      this.customer = "Walk-in";
+      this.paymentType = this.paymentTypes[this.paymentTab];
+    },
+
+    async processPayment() {
+      if (!this.isPaymentValid || this.processingPayment) return;
+
+      this.processingPayment = true;
+      try {
+        const paymentData = {
+          paymentType: this.paymentType,
+          change: this.change,
+          salesTotal: this.total,
+          amountReceived: this.amountPaid,
+          customer: this.selectedDebtor?.name,
+          debtorId: this.selectedDebtor?._id,
+          referenceNo: this.referenceNo,
+          items: this.cart.map((item) => ({
+            ...item,
+            subTotal: item.price * item.quantity,
+          })),
+        };
+
+        if (this.paymentType === "Credit" && this.selectedDebtor) {
+          paymentData.debtor = {
+            id: this.selectedDebtor._id,
+            name: this.selectedDebtor.name,
+            creditLimit: this.selectedDebtor.creditLimit,
+          };
         }
 
-        this.cart.push({ ...data, quantity: 1 });
-      }
-    },
-    openPaymentDialog() {
-      this.dialog = true;
-      this.amountPaid = 0;
-      this.paymentType = null;
-    },
-    validateAmount() {
-      if (this.amountPaid < 0) {
-        this.amountPaid = 0;
-      }
-    },
-    async processPayment() {
-      const data = {
-        paymentType: this.paymentType,
-        change: this.change,
-        salesTotal: this.total,
-        amountReceived: this.amountPaid,
-        isCredit: this.paymentType === "Credit" ? true : false,
-        items: this.cart,
-      };
-
-      if (this.amountPaid >= this.subTotal) {
-        await this.addItem(data);
-        alert(
-          `Payment of ${this.amountPaid} confirmed using ${this.paymentType}`
-        );
+        await this.addItem(paymentData);
+        this.showNotification("Payment processed successfully");
         this.dialog = false;
-        this.cart = [];
-      } else {
-        alert("Insufficient amount paid!");
+        this.clearCart();
+      } catch (error) {
+        this.showNotification("Error processing payment", "error");
+      } finally {
+        this.processingPayment = false;
       }
-    },
-
-    selectCustomer(id) {
-      this.selectedCustomer = id
-      const customer = this.customers.find((c) => c.id === id);
-      if (customer) {
-        this.customerName = customer.name;
-      }
-    },
-
-    customFilter(item, queryText, itemText) {
-      const text = itemText.toString().toLowerCase();
-      const searchText = queryText.toString().toLowerCase();
-      return text.includes(searchText);
-    },
-    addNewCustomer() {
-      const newCustomerId = this.customers.length + 1;
-      const newCustomer = { id: newCustomerId, name: this.newCustomerName };
-      this.customers.push(newCustomer);
-
-      this.selectedCustomer = newCustomerId;
-      this.customerName = newCustomer.name;
-    },
-
-    onCustomerInput(query) {
-      this.newCustomerName = query;
     },
 
     async fetch() {
-      const products = await this.getProductItems();
-
-      this.products = products.result
+      const response = await this.getProductItems();
+      this.products = response.result
         .map((product) => {
-          if (
-            product.type === "Variants" &&
-            product.variants &&
-            product.variants.length > 0
-          ) {
-            return product.variants.map((variant) => {
-              return {
-                ...product,
-                productId: product._id,
-                name: variant.name,
-                upc: variant.upc,
-                stocks: variant.stocks,
-                _id: variant._id,
-                price: variant.price,
-                inStock: variant.stocks ?? 0,
-              };
-            });
+          if (product.type === "Variants" && product.variants?.length > 0) {
+            return product.variants.map((variant) => ({
+              ...product,
+              productId: product._id,
+              name: variant.name,
+              upc: variant.upc,
+              stocks: variant.stocks,
+              _id: variant._id,
+              price: variant.price,
+              inStock: variant.stocks > 0,
+              category: product.category,
+            }));
           }
 
           return {
             ...product,
             productId: product._id,
             stocks: product.stocks,
-            inStock: product.stocks ?? 0,
+            inStock: product.stocks > 0,
+            category: product.category,
           };
         })
         .flat();
 
       this.filteredProducts = this.products;
     },
+    async fetchDebtors() {
+      this.debtorSearchLoading = true;
+      try {
+        const response = await this.getDebtorItems();
+        this.debtors = response;
+      } catch (error) {
+        this.showNotification("Error loading debtors", "error");
+      } finally {
+        this.debtorSearchLoading = false;
+      }
+    },
   },
 };
 </script>
 
 <style scoped>
-.app-container {
-  height: calc(100vh - 100px);
-  margin-top: -40px;
-  padding: 0;
-  background-color: red;
+.main-container {
+  height: 100%;
+  background-color: #f5f5f5;
 }
 
-.main-container {
-  margin: 0;
+.product-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.product-card.disabled {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.greyscale {
+  filter: grayscale(100%);
+  opacity: 0.7;
+}
+
+.payment-summary {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.cart-empty {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Data table customizations */
+.v-data-table ::v-deep .v-data-table__wrapper {
+  overflow-x: hidden;
+}
+
+.v-data-table ::v-deep tbody tr:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.v-data-table ::v-deep .v-data-table__wrapper table {
+  padding: 0 8px;
+}
+
+/* Customer search customizations */
+.v-autocomplete ::v-deep .v-input__slot {
+  min-height: 40px;
+}
+
+.v-autocomplete ::v-deep .v-input__append-inner {
+  margin-top: 8px !important;
+}
+
+/* Card content scrolling */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+/* Animation classes */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .v-card-title {
+    padding: 12px;
+  }
+
+  .v-card-text {
+    padding: 12px;
+  }
+
+  .product-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .v-card {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
+
+/* Custom chip styles */
+.status-chip {
+  min-width: 80px;
+  justify-content: center;
+}
+
+/* Custom button styles */
+.action-button {
+  min-width: 36px !important;
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+}
+
+/* Custom input styles */
+.quantity-input ::v-deep .v-input__control {
+  width: 60px;
+  min-width: 60px;
+}
+
+.quantity-input ::v-deep .v-text-field__details {
+  display: none;
+}
+
+/* Customer info card */
+.customer-info {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-left: 3px solid var(--v-primary-base);
+}
+
+/* Payment dialog customizations */
+.payment-type-tab {
+  min-width: 120px;
+}
+
+.payment-summary-box {
+  border: 1px solid var(--v-primary-base);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+/* Loading states */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
 }
 </style>

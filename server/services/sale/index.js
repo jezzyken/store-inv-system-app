@@ -3,7 +3,7 @@ const SalesItemModel = require("../../models/SalesItem");
 const ProductModel = require("../../models/Product");
 const ProductVariantModel = require("../../models/ProductVariant");
 const DeliveryModel = require("../../models/Delivery");
-const DeptModel = require("../../models/Delivery");
+const DebtorModel = require("../../models/Debtor");
 
 const ObjectId = require("mongoose").Types.ObjectId;
 
@@ -18,10 +18,25 @@ const get = async () => {
       },
     },
     {
+      $lookup: {
+        from: "debtors",
+        localField: "debtor",
+        foreignField: "_id",
+        as: "debtorInfo",
+      },
+    },
+    {
+      $unwind: {
+        path: "$debtorInfo",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $addFields: {
         noOfItems: {
           $size: "$sale",
         },
+        debtorName: "$debtorInfo.name",
       },
     },
     {
@@ -34,11 +49,25 @@ const get = async () => {
 };
 
 const getById = async (id) => {
-  console.log('getting sales item', id)
+  console.log("getting sales item", id);
   const result = await Models.aggregate([
     {
       $match: {
         _id: new ObjectId(id),
+      },
+    },
+    {
+      $lookup: {
+        from: "debtors",
+        localField: "debtor",
+        foreignField: "_id",
+        as: "debtorInfo",
+      },
+    },
+    {
+      $unwind: {
+        path: "$debtorInfo",
+        preserveNullAndEmptyArrays: true,
       },
     },
     {
@@ -111,6 +140,8 @@ const getById = async (id) => {
         notes: {
           $first: "$notes",
         },
+        isCredit: { $first: "$isCredit" },
+        debtor: { $first: "$debtorInfo" },
         items: {
           $push: {
             item_id: "$items._id",
@@ -130,12 +161,40 @@ const getById = async (id) => {
   return result;
 };
 
+const getByDebtor = async (debtorId) => {
+  const result = await Models.aggregate([
+    {
+      $match: {
+        debtor: new ObjectId(debtorId),
+      },
+    },
+    {
+      $lookup: {
+        from: "saleitems",
+        localField: "_id",
+        foreignField: "sale",
+        as: "items",
+      },
+    },
+    {
+      $sort: {
+        date: -1,
+      },
+    },
+  ]);
+  return result;
+};
+
 const add = async (req) => {
-  const { items, isCredit } = req.body;
-
-
+  const { items, paymentType, debtorId } = req.body;
 
   const sale = new Models(req.body);
+
+  if (paymentType === "Credit" && debtorId) {
+    sale.debtor = debtorId;
+    sale.isCredit = true;
+    // await updateDebtorCredit(debtorId, sale.salesTotal);
+  }
 
   const savedSale = await sale.save();
 
@@ -168,6 +227,19 @@ const add = async (req) => {
 
   return savedSale;
 };
+
+// const updateDebtorCredit = async (debtorId, amount) => {
+//   await DebtorModel.findByIdAndUpdate(
+//     debtorId,
+//     {
+//       $inc: { balance: amount },
+//     },
+//     { new: true }
+//   );
+// };
+
+
+
 
 const update = async (id, data) => {
   const {
@@ -321,6 +393,7 @@ const remove = async (id) => {
 module.exports = {
   get,
   getById,
+  getByDebtor,
   remove,
   add,
   update,

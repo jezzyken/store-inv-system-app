@@ -34,7 +34,11 @@ const saleSchema = new mongoose.Schema(
     },
     customer: {
       type: String,
-      default: "Walkin"
+      default: "Walk-in"
+    },
+    debtor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Debtor",
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,

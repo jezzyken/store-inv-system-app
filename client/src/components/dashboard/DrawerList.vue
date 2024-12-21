@@ -106,9 +106,9 @@ export default {
           },
           {
             action: "mdi-note-multiple",
-            title: "Debts",
+            title: "Debtors",
             appendIcon: "",
-            route: "/delivery",
+            route: "/debtors",
           },
           // {
           //   action: "mdi-contacts",
