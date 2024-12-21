@@ -11,5 +11,5 @@ module.exports = defineConfig({
       return args;
     });
   },
-  outputDir: path.resolve(__dirname,'../../server/public'),
+  outputDir: path.resolve(__dirname,'../server/public'),
 })

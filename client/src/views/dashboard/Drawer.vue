@@ -1,7 +1,7 @@
 <template>
   <!-- src="https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg" -->
 
-  <v-navigation-drawer v-model="$store.state.drawer" dark class="nav-bg" app >
+  <v-navigation-drawer v-model="$store.state.drawer" dark app color="indigo darken-4">
     <DrawerListVue />
   </v-navigation-drawer>
 </template>
