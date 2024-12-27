@@ -1,6 +1,6 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-// import store from "@/store";
+import store from "@/store";
 
 Vue.use(VueRouter);
 
@@ -207,27 +207,25 @@ const routes = [
   },
 ];
 
+
+
 const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
   routes,
 });
 
-// router.beforeEach((to, from, next) => {
-//   if (to.matched.some((record) => record.meta.requiresAuth)) {
-//     if (!store.getters["auth/isAuthenticated"]) {
-//       next({
-//         path: "/login",
-//         query: { redirect: to.fullPath },
-//       });
-//     } else {
-//       next();
-//     }
-//   } else if (to.path === "/login" && store.getters["auth/isAuthenticated"]) {
-//     next({ path: "/dashboard" });
-//   } else {
-//     next();
-//   }
-// });
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const isAuthenticated = store.getters['users/isAuthenticated'];
+
+  if (requiresAuth && !isAuthenticated) {
+    next('/login');
+  } else if (to.path === '/login' && isAuthenticated) {
+    next('/dashboard');
+  } else {
+    next();
+  }
+});
 
 export default router;

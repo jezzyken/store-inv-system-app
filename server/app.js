@@ -1,6 +1,7 @@
 const express = require("express")
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const morgan = require('morgan'); // Add morgan import
 
 const app = express()
 
@@ -10,6 +11,8 @@ const connectDB = require('./config/db');
 require('dotenv').config({path: './.env'});
 
 connectDB();
+
+app.use(morgan('dev'));
 
 app.use(cors());
 

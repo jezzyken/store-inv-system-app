@@ -1,98 +1,177 @@
 <template>
-  <v-sheet
-    class="pa-12 d-flex flex-column align-center justify-center"
-    rounded
-    color="#000033"
-    height="100vh"
-  >
-    <div class="text-center mb-4">
-      <span class="text-h4 text-uppercase white--text">Login</span>
-    </div>
-    <v-card class="px-6 py-8" width="400">
-      <v-row>
-        <v-col cols="12">
-          <v-text-field
-            v-model="email"
-            label="Email"
-            clearable
-            outlined
-          ></v-text-field>
-        </v-col>
-        <v-col cols="12">
-          <v-text-field
-            :append-icon="show ? 'mdi-eye' : 'mdi-eye-off'"
-            class="mt-n3"
-            v-model="password"
-            label="Password"
-            placeholder="Enter your password"
-            outlined
-            :type="show ? 'text' : 'password'"
-            @click:append="show = !show"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="12">
-          <v-btn
-            color="success"
-            size="large"
-            type="submit"
-            variant="elevated"
-            block
-            class="mt-n3"
-            @click="login"
-            :disabled="isLoading"
-          >
-            Sign In
-          </v-btn>
-        </v-col>
-      </v-row>
+  <v-container class="fill-height" fluid>
+    <v-row align="center" justify="center">
+      <v-col cols="12" sm="8" md="6" lg="4">
+        <v-card class="login-card" elevation="8">
+          <!-- Logo/Brand Section -->
+          <v-card-text class="text-center pt-8">
+            <v-avatar size="80" color="primary" class="mb-4">
+              <v-icon size="40" color="white">mdi-account</v-icon>
+            </v-avatar>
+            <h1 class="text-h4 font-weight-bold primary--text mb-2">Welcome Back</h1>
+            <p class="text-subtitle-1 grey--text">Please sign in to continue</p>
+          </v-card-text>
 
-      <br />
-    </v-card>
+          <v-card-text class="pt-4">
+            <v-form @submit.prevent="handleLogin" ref="loginForm">
+              <!-- Email Field -->
+              <v-text-field
+                v-model="formData.email"
+                label="Email"
+                type="email"
+                filled
+                rounded
+                dense
+                color="primary"
+                prepend-inner-icon="mdi-email"
+                :rules="emailRules"
+                class="mb-4"
+                required
+              ></v-text-field>
 
-    <v-snackbar v-model="snackbar" :timeout="3000" color="red" top>
-      {{ snackbarMessage }}
-    </v-snackbar>
-  </v-sheet>
+              <!-- Password Field -->
+              <v-text-field
+                v-model="formData.password"
+                label="Password"
+                :type="showPassword ? 'text' : 'password'"
+                filled
+                rounded
+                dense
+                color="primary"
+                prepend-inner-icon="mdi-lock"
+                :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append="showPassword = !showPassword"
+                :rules="passwordRules"
+                class="mb-2"
+                required
+              ></v-text-field>
+
+
+              <!-- Error Alert -->
+              <v-alert
+                v-if="error"
+                type="error"
+                dense
+                text
+                class="mb-4"
+              >
+                {{ error }}
+              </v-alert>
+
+              <!-- Login Button -->
+              <v-btn
+                block
+                x-large
+                rounded
+                color="primary"
+                height="50"
+                :loading="loading"
+                :disabled="loading"
+                @click="handleLogin"
+                class="mb-6"
+              >
+                <v-icon left>mdi-login</v-icon>
+                Sign In
+              </v-btn>
+
+            </v-form>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
+import { mapActions } from 'vuex';
+
 export default {
-  data: () => ({
-    form: false,
-    email: null,
-    password: null,
-    loading: false,
-    show: false,
-    isLoading: false,
-    snackbar: false,
-    snackbarMessage: "",
-  }),
+  name: 'LoginForm',
+  
+  data() {
+    return {
+      formData: {
+        email: '',
+        password: ''
+      },
+      loading: false,
+      error: null,
+      showPassword: false,
+      rememberMe: false,
+      emailRules: [
+        v => !!v || 'Email is required',
+        v => /.+@.+\..+/.test(v) || 'Email must be valid'
+      ],
+      passwordRules: [
+        v => !!v || 'Password is required',
+        v => v.length >= 6 || 'Password must be at least 6 characters'
+      ],
+      socialLogins: [
+        { name: 'google', icon: 'mdi-google', color: 'red' },
+        { name: 'facebook', icon: 'mdi-facebook', color: 'blue' },
+        { name: 'twitter', icon: 'mdi-twitter', color: 'light-blue' }
+      ]
+    };
+  },
 
   methods: {
-    async login() {
-      this.isLoading = true;
-      const user = {
-        email: this.email,
-        password: this.password,
-      };
-      const response = await this.$store.dispatch("auth/login", user);
-      if (response.status === 500) {
-        this.snackbarMessage = "Invalid login credentials";
-        this.snackbar = true;
-        this.isLoading = false;
-        return;
+    ...mapActions('users', ['login']),
+
+    async handleLogin() {
+      if (!this.$refs.loginForm.validate()) return;
+      
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        const response = await this.login(this.formData);
+        
+        if (response.success) {
+          this.$router.push('/dashboard');
+        } else {
+          this.error = response.message || 'Login failed';
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'An error occurred';
+      } finally {
+        this.loading = false;
       }
-      this.isLoading = false;
     },
+
+    forgotPassword() {
+      this.$router.push('/forgot-password');
+    },
+
+    goToSignup() {
+      this.$router.push('/signup');
+    },
+
+    socialLogin(provider) {
+      console.log(`Logging in with ${provider}`);
+      // Implement social login logic here
+    }
   },
+
+  created() {
+    if (this.$store.getters['users/isAuthenticated']) {
+      this.$router.push('/dashboard');
+    }
+  }
 };
 </script>
 
 <style scoped>
-.v-sheet {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.login-card {
+  border-radius: 16px;
+}
+
+.v-card__text {
+  padding: 24px 32px;
+}
+
+@media (max-width: 600px) {
+  .v-card__text {
+    padding: 16px 24px;
+  }
 }
 </style>

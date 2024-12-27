@@ -741,7 +741,7 @@ export default {
       if (existingItem) {
         if (existingItem.quantity < existingItem.availableStocks) {
           existingItem.quantity++;
-          this.showNotification(`${item.name} quantity increased`);
+          // this.showNotification(`${item.name} quantity increased`);
         } else {
           this.showNotification("Maximum stock limit reached", "warning");
         }
@@ -757,7 +757,7 @@ export default {
         };
 
         this.cart.push(data);
-        this.showNotification(`${item.name} added to cart`);
+        // this.showNotification(`${item.name} added to cart`);
       }
     },
 

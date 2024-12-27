@@ -3,9 +3,18 @@
     <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
     <v-toolbar-title>{{ capitalizedRouteName }}</v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-btn  @click="logout" text
-      ><v-icon dark> mdi-logout-variant </v-icon></v-btn
-    >
+
+    <!-- Add user info in app bar -->
+    <!-- <v-btn text class="text-capitalize">
+      {{ currentUser?.fname }} {{ currentUser?.lname }}
+      <v-avatar size="32" class="ml-2">
+        <v-img :src="currentUser?.image || defaultAvatar"></v-img>
+      </v-avatar>
+    </v-btn> -->
+
+    <v-btn @click="handleLogout" text>
+      <v-icon>mdi-logout-variant</v-icon>
+    </v-btn>
   </v-app-bar>
 </template>
 
@@ -14,14 +23,19 @@ import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
 
 export default {
   name: "AppBar",
+
+  data: () => ({
+    defaultAvatar: require("@/assets/default-avatar.png"),
+  }),
+
   computed: {
     ...mapState(["drawer"]),
-    ...mapGetters("auth", ["isAuthenticated", "user"]),
-    userName() {
-      return this.user && (this.user.fname || this.user.lname)
-        ? `${this.user.fname} ${this.user.lname}`
-        : "";
+    ...mapGetters("users", ["getCurrentUser", "isAuthenticated"]),
+
+    currentUser() {
+      return this.getCurrentUser;
     },
+
     capitalizedRouteName() {
       if (this.$route.name) {
         return this.$route.name
@@ -31,6 +45,7 @@ export default {
       }
       return "";
     },
+
     drawer: {
       get() {
         return this.$store.state.drawer;
@@ -40,11 +55,24 @@ export default {
       },
     },
   },
+
   methods: {
-    ...mapActions("auth", ["logout"]),
+    ...mapActions("users", ["logout"]),
     ...mapMutations({
       setDrawer: "SET_DRAWER",
     }),
+
+    async handleLogout() {
+      await this.logout();
+      this.$router.push("/login");
+    },
+  },
+
+  created() {
+    // Check authentication
+    if (!this.isAuthenticated) {
+      this.$router.push("/login");
+    }
   },
 };
 </script>

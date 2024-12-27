@@ -7,9 +7,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    mname: {
-      type: String,
-    },
     lname: {
       type: String,
       required: true,
@@ -32,16 +29,21 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["Admin", "Cashier"],
+      enum: ["admin", "cashier"],
       default: "Cashier",
     },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
 
-// Hash the password before saving the user
+userSchema.virtual('fullName').get(function() {
+  return `${this.fname} ${this.lname}`;
+});
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 

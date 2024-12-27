@@ -16,11 +16,10 @@ requireModule.keys().forEach((fileName) => {
 export default new Vuex.Store({
   modules,
   state: {
-    drawer: true,
+    drawer: null,
   },
   mutations: {
     SET_DRAWER(state, payload) {
-      console.log(payload)
       state.drawer = payload;
     },
   },

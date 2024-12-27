@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const initializeAdmin = require('./initAdmin');
 
 const connectDB = async () => {
   await mongoose
@@ -6,8 +7,9 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     })
-    .then(() => {
+    .then(async () => {
       console.log(`Database connected successfully`);
+      await initializeAdmin();
     })
     .catch((err) => {
       console.log(`Unable to connect with the database ${err}`);
