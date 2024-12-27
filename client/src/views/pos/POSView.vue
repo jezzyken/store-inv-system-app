@@ -1,10 +1,8 @@
 <template>
   <div class="main-container">
     <v-row no-gutters class="fill-height">
-      <!-- Products Section -->
       <v-col cols="7">
         <v-card class="ma-2 fill-height d-flex flex-column">
-          <!-- Search Header -->
           <v-card-title class="py-2">
             <v-text-field
               v-model="searchQuery"
@@ -18,7 +16,6 @@
             ></v-text-field>
           </v-card-title>
 
-          <!-- Categories -->
           <v-chip-group
             v-model="selectedCategory"
             active-class="primary--text"
@@ -35,7 +32,6 @@
             </v-chip>
           </v-chip-group>
 
-          <!-- Products Grid -->
           <v-card-text
             class="flex-grow-1 overflow-y-auto"
             style="max-height: calc(75vh - 10px)"
@@ -155,7 +151,6 @@
             </v-autocomplete>
           </v-card-title>
 
-          <!-- Selected Debtor Info -->
           <v-card-text v-if="selectedDebtor" class="py-2 grey lighten-4">
             <div class="d-flex justify-space-between align-center">
               <div>
@@ -174,7 +169,6 @@
             </div>
           </v-card-text>
 
-          <!-- Cart Title -->
           <v-card-title class="py-2 d-flex justify-space-between">
             <span>Orders</span>
             <v-btn v-if="cart.length" text small color="red" @click="clearCart">
@@ -182,7 +176,6 @@
             </v-btn>
           </v-card-title>
 
-          <!-- Cart Items -->
           <div v-if="cart.length > 0" class="flex-grow-1 overflow-y-auto px-2">
             <v-data-table
               :headers="cartHeaders"
@@ -202,25 +195,38 @@
                     </div>
                   </td>
                   <td>
-                    <v-row align="center" justify="center" no-gutters>
+                    <div class="d-flex align-center justify-center">
                       <v-btn
                         icon
-                        small
+                        x-small
                         :disabled="item.quantity <= 1"
                         @click="decrementQuantity(item)"
                       >
                         <v-icon small>mdi-minus</v-icon>
                       </v-btn>
-                      <span class="mx-2">{{ item.quantity }}</span>
+                      <v-text-field
+                        v-model.number="item.quantity"
+                        type="number"
+                        dense
+                        hide-details
+                        class="quantity-input mx-1"
+                        :style="{
+                          width: '50px',
+                          minWidth: '50px',
+                        }"
+                        min="1"
+                        :max="item.availableStocks"
+                        @input="validateQuantity(item)"
+                      ></v-text-field>
                       <v-btn
                         icon
-                        small
+                        x-small
                         :disabled="item.quantity >= item.availableStocks"
                         @click="incrementQuantity(item)"
                       >
                         <v-icon small>mdi-plus</v-icon>
                       </v-btn>
-                    </v-row>
+                    </div>
                   </td>
                   <td class="text-right">₱{{ item.price }}</td>
                   <td class="text-right">
@@ -235,7 +241,6 @@
               </template>
             </v-data-table>
           </div>
-          <!-- Empty Cart State -->
           <v-card-text v-else class="cart-empty">
             <v-icon size="64" color="grey lighten-1">mdi-cart-outline</v-icon>
             <p class="mt-2 grey--text text-center">
@@ -244,7 +249,6 @@
             </p>
           </v-card-text>
 
-          <!-- Cart Summary -->
           <v-card-text v-if="cart.length > 0" class="pt-0">
             <v-divider class="my-2"></v-divider>
             <div class="d-flex justify-space-between mb-1">
@@ -257,7 +261,6 @@
             </div>
           </v-card-text>
 
-          <!-- Payment Button -->
           <v-card-actions class="pa-4 pt-0">
             <v-btn
               dark
@@ -275,7 +278,6 @@
       </v-col>
     </v-row>
 
-    <!-- New Customer Dialog -->
     <v-dialog v-model="newCustomerDialog" max-width="400">
       <v-card>
         <v-card-title class="primary white--text">
@@ -320,7 +322,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Payment Dialog -->
     <v-dialog v-model="dialog" max-width="500" persistent>
       <v-card>
         <v-card-title class="primary white--text">
@@ -353,7 +354,6 @@
           </v-tabs>
 
           <v-tabs-items v-model="paymentTab" class="mt-4">
-            <!-- Cash Payment -->
             <v-tab-item>
               <v-text-field
                 v-model="customer"
@@ -373,7 +373,6 @@
               ></v-text-field>
             </v-tab-item>
 
-            <!-- GCash Payment -->
             <v-tab-item>
               <v-text-field
                 v-model="customer"
@@ -398,7 +397,6 @@
               ></v-text-field>
             </v-tab-item>
 
-            <!-- Credit Payment Tab -->
             <v-tab-item>
               <v-alert
                 v-if="selectedDebtor"
@@ -479,7 +477,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Snackbar for notifications -->
     <v-snackbar
       v-model="snackbar.show"
       :color="snackbar.color"
@@ -504,17 +501,14 @@ export default {
 
   data() {
     return {
-      // Search and filtering
       searchQuery: "",
       selectedCategory: 0,
       categories: ["All", "Food", "Beverages", "Snacks", "Others"],
 
-      // Products and cart
       products: [],
       filteredProducts: [],
       cart: [],
 
-      // Payment related
       dialog: false,
       paymentTab: 0,
       paymentType: null,
@@ -524,7 +518,6 @@ export default {
       referenceNo: "",
       processingPayment: false,
 
-      // Customer related
       selectedCustomer: null,
       customerSearchLoading: false,
       newCustomerDialog: false,
@@ -567,7 +560,6 @@ export default {
         },
       ],
 
-      // UI elements
       cartHeaders: [
         { text: "Product", value: "name", width: "40%" },
         { text: "Qty", value: "quantity", align: "center", width: "20%" },
@@ -692,7 +684,7 @@ export default {
       };
       return icons[type] || "mdi-help";
     },
-    // Product and Filtering Methods
+
     async fetchInitialData() {
       try {
         await this.fetch();
@@ -726,7 +718,26 @@ export default {
       this.searchQuery = "";
     },
 
-    // Cart Methods
+    validateQuantity(item) {
+      let quantity = parseInt(item.quantity);
+
+      if (isNaN(quantity) || quantity < 1) {
+        item.quantity = 1;
+        return;
+      }
+
+      if (quantity > item.availableStocks) {
+        item.quantity = item.availableStocks;
+        this.showNotification(
+          `Maximum stock limit is ${item.availableStocks}`,
+          "warning"
+        );
+        return;
+      }
+
+      item.quantity = quantity;
+    },
+
     addToCart(item) {
       if (!item.inStock) {
         this.showNotification("Product is out of stock", "error");
@@ -789,7 +800,6 @@ export default {
       this.showNotification("Cart cleared");
     },
 
-    // Customer Methods
     customFilter(item, queryText) {
       const searchText = queryText.toLowerCase();
       return (
@@ -801,9 +811,7 @@ export default {
     async searchCustomers(query) {
       this.customerSearchLoading = true;
       try {
-        // Simulate API delay
         await new Promise((resolve) => setTimeout(resolve, 500));
-        // In real implementation, make API call here
       } finally {
         this.customerSearchLoading = false;
       }
@@ -828,7 +836,7 @@ export default {
           contact: this.newCustomer.contact,
           address: this.newCustomer.address,
           balance: 0,
-          creditLimit: 5000, // Default credit limit
+          creditLimit: 5000,
         };
 
         this.customers.push(newCustomer);
@@ -1012,7 +1020,6 @@ export default {
   justify-content: center;
 }
 
-/* Data table customizations */
 .v-data-table ::v-deep .v-data-table__wrapper {
   overflow-x: hidden;
 }
@@ -1025,7 +1032,6 @@ export default {
   padding: 0 8px;
 }
 
-/* Customer search customizations */
 .v-autocomplete ::v-deep .v-input__slot {
   min-height: 40px;
 }
@@ -1034,7 +1040,6 @@ export default {
   margin-top: 8px !important;
 }
 
-/* Card content scrolling */
 .overflow-y-auto {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
@@ -1053,7 +1058,6 @@ export default {
   border-radius: 3px;
 }
 
-/* Animation classes */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s;
@@ -1064,7 +1068,6 @@ export default {
   opacity: 0;
 }
 
-/* Responsive adjustments */
 @media (max-width: 960px) {
   .v-card-title {
     padding: 12px;
@@ -1079,7 +1082,6 @@ export default {
   }
 }
 
-/* Print styles */
 @media print {
   .no-print {
     display: none !important;
@@ -1091,13 +1093,11 @@ export default {
   }
 }
 
-/* Custom chip styles */
 .status-chip {
   min-width: 80px;
   justify-content: center;
 }
 
-/* Custom button styles */
 .action-button {
   min-width: 36px !important;
   width: 36px;
@@ -1105,7 +1105,6 @@ export default {
   padding: 0 !important;
 }
 
-/* Custom input styles */
 .quantity-input ::v-deep .v-input__control {
   width: 60px;
   min-width: 60px;
@@ -1115,13 +1114,11 @@ export default {
   display: none;
 }
 
-/* Customer info card */
 .customer-info {
   background-color: rgba(0, 0, 0, 0.03);
   border-left: 3px solid var(--v-primary-base);
 }
 
-/* Payment dialog customizations */
 .payment-type-tab {
   min-width: 120px;
 }
@@ -1132,7 +1129,6 @@ export default {
   padding: 16px;
 }
 
-/* Loading states */
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -1144,5 +1140,24 @@ export default {
   align-items: center;
   justify-content: center;
   z-index: 1;
+}
+
+.quantity-input ::v-deep .v-input__control {
+  width: 50px !important;
+  min-width: 50px !important;
+}
+
+.quantity-input ::v-deep input {
+  text-align: center !important;
+  padding: 0 !important;
+}
+
+.quantity-input ::v-deep .v-input__slot {
+  min-height: 24px !important;
+  padding: 0 4px !important;
+}
+
+.quantity-input ::v-deep .v-text-field__details {
+  display: none !important;
 }
 </style>
