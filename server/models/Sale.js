@@ -22,6 +22,11 @@ const saleSchema = new mongoose.Schema(
       type: String,
       default: "Cash",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["paid", "unpaid"],
+      default: "paid",
+    },
     change: {
       type: Number,
     },
@@ -30,11 +35,11 @@ const saleSchema = new mongoose.Schema(
     },
     isCredit: {
       type: Boolean,
-      default: false
+      default: false,
     },
     customer: {
       type: String,
-      default: "Walk-in"
+      default: "Walk-in",
     },
     debtor: {
       type: mongoose.Schema.Types.ObjectId,
@@ -65,6 +70,7 @@ saleSchema.pre("save", function (next) {
   }
 
   this.referenceCode = referenceCode;
+
   next();
 });
 

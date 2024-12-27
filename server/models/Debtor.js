@@ -19,9 +19,16 @@ const debtorSchema = new mongoose.Schema(
     },
   },
   {
-    timestamp: true,
+    timestamps: true, 
   }
 );
+
+debtorSchema.pre('save', function(next) {
+  if (this.isNew && !this.availableCredit) {
+    this.availableCredit = this.creditLimit;
+  }
+  next();
+});
 
 const Customer = mongoose.model("Debtor", debtorSchema);
 

@@ -158,6 +158,8 @@ const getById = async (id) => {
       },
     },
   ]);
+
+  console.log(result)
   return result;
 };
 
@@ -187,13 +189,13 @@ const getByDebtor = async (debtorId) => {
 
 const add = async (req) => {
   const { items, paymentType, debtorId } = req.body;
-
   const sale = new Models(req.body);
 
   if (paymentType === "Credit" && debtorId) {
     sale.debtor = debtorId;
     sale.isCredit = true;
-    // await updateDebtorCredit(debtorId, sale.salesTotal);
+    
+    await updateDebtorCredit(debtorId, parseFloat(sale.salesTotal));
   }
 
   const savedSale = await sale.save();
@@ -213,9 +215,7 @@ const add = async (req) => {
     if (itemData.variant) {
       await ProductModel.updateOne(
         { _id: itemData.product, "variants._id": itemData.variant },
-        {
-          $inc: { "variants.$.stocks": -quantityToSub },
-        }
+        { $inc: { "variants.$.stocks": -quantityToSub } }
       );
     } else {
       await ProductModel.updateOne(
@@ -228,15 +228,6 @@ const add = async (req) => {
   return savedSale;
 };
 
-// const updateDebtorCredit = async (debtorId, amount) => {
-//   await DebtorModel.findByIdAndUpdate(
-//     debtorId,
-//     {
-//       $inc: { balance: amount },
-//     },
-//     { new: true }
-//   );
-// };
 
 
 
@@ -388,6 +379,27 @@ const update = async (id, data) => {
 const remove = async (id) => {
   const result = await Models.findByIdAndDelete(id);
   return result;
+};
+
+const updateDebtorCredit = async (debtorId, amount) => {
+  try {
+    const debtor = await DebtorModel.findById(debtorId);
+    if (!debtor) {
+      throw new Error('Debtor not found');
+    }
+
+    const newAvailableCredit = debtor.availableCredit - amount;
+
+    await DebtorModel.findByIdAndUpdate(
+      debtorId,
+      { $set: { availableCredit: newAvailableCredit } },
+      { new: true }
+    );
+
+    return true;
+  } catch (error) {
+    throw new Error(`Failed to update debtor credit: ${error.message}`);
+  }
 };
 
 module.exports = {

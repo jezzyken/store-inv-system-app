@@ -4,99 +4,42 @@
       <v-col cols="7">
         <v-card class="ma-2 fill-height d-flex flex-column">
           <v-card-title class="py-2">
-            <v-text-field
-              v-model="searchQuery"
-              label="Search products..."
-              prepend-inner-icon="mdi-magnify"
-              clearable
-              dense
-              outlined
-              hide-details
-              @click:clear="clearSearch"
-            ></v-text-field>
+            <v-text-field v-model="searchQuery" label="Search products..." prepend-inner-icon="mdi-magnify" clearable
+              dense outlined hide-details @click:clear="clearSearch"></v-text-field>
           </v-card-title>
 
-          <v-chip-group
-            v-model="selectedCategory"
-            active-class="primary--text"
-            class="px-4"
-            mandatory
-          >
-            <v-chip
-              v-for="category in categories"
-              :key="category"
-              filter
-              outlined
-            >
+          <v-chip-group v-model="selectedCategory" active-class="primary--text" class="px-4" mandatory>
+            <v-chip v-for="category in categories" :key="category" filter outlined>
               {{ category }}
             </v-chip>
           </v-chip-group>
 
-          <v-card-text
-            class="flex-grow-1 overflow-y-auto"
-            style="max-height: calc(75vh - 10px)"
-          >
+          <v-card-text class="flex-grow-1 overflow-y-auto" style="max-height: calc(75vh - 10px)">
             <v-row>
-              <v-col
-                v-for="product in filteredProducts"
-                :key="product.id"
-                cols="12"
-                sm="6"
-                md="4"
-                lg="3"
-              >
+              <v-col v-for="product in filteredProducts" :key="product.id" cols="12" sm="6" md="4" lg="3">
                 <v-hover v-slot="{ hover }">
-                  <v-card
-                    class="product-card"
-                    @click="addToCart(product)"
-                    :disabled="!product.inStock"
-                    :elevation="hover ? 8 : 2"
-                    :class="{ 'on-hover': hover }"
-                  >
-                    <v-img
-                      :src="product.image"
-                      class="mx-auto"
-                      contain
-                      height="200px"
-                      :class="{ greyscale: !product.inStock }"
-                    >
+                  <v-card class="product-card" @click="addToCart(product)" :disabled="!product.inStock"
+                    :elevation="hover ? 8 : 2" :class="{ 'on-hover': hover }">
+                    <v-img :src="product.image" class="mx-auto" contain height="200px"
+                      :class="{ greyscale: !product.inStock }">
                       <template v-slot:placeholder>
-                        <v-row
-                          class="fill-height ma-0"
-                          align="center"
-                          justify="center"
-                        >
-                          <v-progress-circular
-                            indeterminate
-                            color="grey lighten-2"
-                          ></v-progress-circular>
+                        <v-row class="fill-height ma-0" align="center" justify="center">
+                          <v-progress-circular indeterminate color="grey lighten-2"></v-progress-circular>
                         </v-row>
                       </template>
                     </v-img>
 
                     <v-card-text class="pb-0">
-                      <div
-                        class="text-subtitle-1 font-weight-medium text-truncate"
-                      >
+                      <div class="text-subtitle-1 font-weight-medium text-truncate">
                         {{ product.name }}
                       </div>
                       <div class="d-flex justify-space-between align-center">
-                        <span class="text-h6 primary--text"
-                          >₱{{ product.price.toFixed(2) }}</span
-                        >
-                        <span class="caption grey--text"
-                          >Stock: {{ product.inStock }}</span
-                        >
+                        <span class="text-h6 primary--text">₱{{ product.price.toFixed(2) }}</span>
+                        <span class="caption grey--text">Stock: {{ product.inStock }}</span>
                       </div>
                     </v-card-text>
 
-                    <v-chip
-                      v-if="!product.inStock"
-                      color="red"
-                      text-color="white"
-                      small
-                      class="ma-2"
-                    >
+                    <v-chip v-if="!product.inStock" color="red" text-color="white" small class="ma-2">
                       Out of Stock
                     </v-chip>
                   </v-card>
@@ -112,20 +55,9 @@
         <v-card class="ma-2 fill-height d-flex flex-column">
           <!-- Debtor Search Section -->
           <v-card-title class="py-2">
-            <v-autocomplete
-              v-model="selectedDebtor"
-              :items="debtors"
-              item-text="name"
-              item-value="_id"
-              label="Search Debtor"
-              dense
-              outlined
-              hide-details
-              clearable
-              :loading="debtorSearchLoading"
-              :filter="customFilter"
-              return-object
-            >
+            <v-autocomplete v-model="selectedDebtor" :items="debtors" item-text="name" item-value="_id"
+              label="Search Debtor" dense outlined hide-details clearable :loading="debtorSearchLoading"
+              :filter="customFilter" return-object>
               <template v-slot:prepend-inner>
                 <v-icon small>mdi-account-search</v-icon>
               </template>
@@ -133,14 +65,17 @@
               <template v-slot:item="{ item }">
                 <v-list-item-content>
                   <v-list-item-title>{{ item.name }}</v-list-item-title>
-                  <v-list-item-subtitle class="d-flex align-center">
-                    <span class="caption"
-                      >Credit Limit: ₱{{ item.creditLimit }}</span
-                    >
+                  <v-list-item-subtitle class="d-flex align-center justify-space-between">
+                    <span class="caption">
+                      Available Credit: ₱{{ item.availableCredit }}
+                    </span>
+                    <v-btn small color="primary" @click.stop="openPayDebtDialog(item)"
+                      :disabled="item.availableCredit >= item.creditLimit">
+                      Pay
+                    </v-btn>
                   </v-list-item-subtitle>
                 </v-list-item-content>
               </template>
-
               <template v-slot:no-data>
                 <v-list-item>
                   <v-list-item-content>
@@ -158,7 +93,7 @@
                   {{ selectedDebtor.name }}
                 </div>
                 <div class="caption">
-                  Credit Limit: ₱{{ selectedDebtor.creditLimit }}
+                  Available Credit: ₱{{ selectedDebtor.availableCredit }}
                 </div>
               </div>
               <div>
@@ -177,13 +112,7 @@
           </v-card-title>
 
           <div v-if="cart.length > 0" class="flex-grow-1 overflow-y-auto px-2">
-            <v-data-table
-              :headers="cartHeaders"
-              :items="cart"
-              hide-default-footer
-              dense
-              class="elevation-1"
-            >
+            <v-data-table :headers="cartHeaders" :items="cart" hide-default-footer dense class="elevation-1">
               <template v-slot:item="{ item }">
                 <tr>
                   <td>
@@ -196,34 +125,16 @@
                   </td>
                   <td>
                     <div class="d-flex align-center justify-center">
-                      <v-btn
-                        icon
-                        x-small
-                        :disabled="item.quantity <= 1"
-                        @click="decrementQuantity(item)"
-                      >
+                      <v-btn icon x-small :disabled="item.quantity <= 1" @click="decrementQuantity(item)">
                         <v-icon small>mdi-minus</v-icon>
                       </v-btn>
-                      <v-text-field
-                        v-model.number="item.quantity"
-                        type="number"
-                        dense
-                        hide-details
-                        class="quantity-input mx-1"
-                        :style="{
+                      <v-text-field v-model.number="item.quantity" type="number" dense hide-details
+                        class="quantity-input mx-1" :style="{
                           width: '50px',
                           minWidth: '50px',
-                        }"
-                        min="1"
-                        :max="item.availableStocks"
-                        @input="validateQuantity(item)"
-                      ></v-text-field>
-                      <v-btn
-                        icon
-                        x-small
-                        :disabled="item.quantity >= item.availableStocks"
-                        @click="incrementQuantity(item)"
-                      >
+                        }" min="1" :max="item.availableStocks" @input="validateQuantity(item)"></v-text-field>
+                      <v-btn icon x-small :disabled="item.quantity >= item.availableStocks"
+                        @click="incrementQuantity(item)">
                         <v-icon small>mdi-plus</v-icon>
                       </v-btn>
                     </div>
@@ -262,14 +173,7 @@
           </v-card-text>
 
           <v-card-actions class="pa-4 pt-0">
-            <v-btn
-              dark
-              color="primary"
-              block
-              x-large
-              @click="openPaymentDialog"
-              :disabled="cart.length === 0"
-            >
+            <v-btn dark color="primary" block x-large @click="openPaymentDialog" :disabled="cart.length === 0">
               <v-icon left>mdi-cash-register</v-icon>
               Proceed to Payment
             </v-btn>
@@ -285,37 +189,18 @@
         </v-card-title>
         <v-card-text class="pt-4">
           <v-form ref="customerForm" v-model="isCustomerFormValid">
-            <v-text-field
-              v-model="newCustomer.name"
-              label="Customer Name"
-              outlined
-              dense
-              :rules="[(v) => !!v || 'Name is required']"
-            ></v-text-field>
-            <v-text-field
-              v-model="newCustomer.contact"
-              label="Contact Number"
-              outlined
-              dense
-              :rules="[(v) => !!v || 'Contact number is required']"
-            ></v-text-field>
-            <v-text-field
-              v-model="newCustomer.address"
-              label="Address"
-              outlined
-              dense
-              :rules="[(v) => !!v || 'Address is required']"
-            ></v-text-field>
+            <v-text-field v-model="newCustomer.name" label="Customer Name" outlined dense
+              :rules="[(v) => !!v || 'Name is required']"></v-text-field>
+            <v-text-field v-model="newCustomer.contact" label="Contact Number" outlined dense
+              :rules="[(v) => !!v || 'Contact number is required']"></v-text-field>
+            <v-text-field v-model="newCustomer.address" label="Address" outlined dense
+              :rules="[(v) => !!v || 'Address is required']"></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text @click="newCustomerDialog = false">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            @click="addNewCustomer"
-            :disabled="!isCustomerFormValid"
-          >
+          <v-btn color="primary" @click="addNewCustomer" :disabled="!isCustomerFormValid">
             Add Customer
           </v-btn>
         </v-card-actions>
@@ -343,11 +228,7 @@
           </div>
 
           <v-tabs v-model="paymentTab" grow>
-            <v-tab
-              v-for="type in paymentTypes"
-              :key="type"
-              :disabled="type === 'Credit' && !selectedDebtor"
-            >
+            <v-tab v-for="type in paymentTypes" :key="type" :disabled="type === 'Credit' && !selectedDebtor">
               <v-icon left>{{ getPaymentIcon(type) }}</v-icon>
               {{ type }}
             </v-tab>
@@ -355,59 +236,27 @@
 
           <v-tabs-items v-model="paymentTab" class="mt-4">
             <v-tab-item>
-              <v-text-field
-                v-model="customer"
-                label="Customer Name"
-                outlined
-                :placeholder="'Walk-in'"
-                class="mb-3"
-              ></v-text-field>
-              <v-text-field
-                v-model.number="amountPaid"
-                label="Amount Tendered"
-                prefix="₱"
-                type="number"
-                outlined
-                @input="validateAmount"
-                :error-messages="amountError"
-              ></v-text-field>
+              <v-text-field v-model="customer" label="Customer Name" outlined :placeholder="'Walk-in'"
+                class="mb-3"></v-text-field>
+              <v-text-field v-model.number="amountPaid" label="Amount Tendered" prefix="₱" type="number" outlined
+                @input="validateAmount" :error-messages="amountError"></v-text-field>
             </v-tab-item>
 
             <v-tab-item>
-              <v-text-field
-                v-model="customer"
-                label="Customer Name"
-                outlined
-                :placeholder="'Walk-in'"
-                class="mb-3"
-              ></v-text-field>
-              <v-text-field
-                v-model="referenceNo"
-                label="GCash Reference Number"
-                outlined
-                :rules="[(v) => !!v || 'Reference number is required']"
-              ></v-text-field>
-              <v-text-field
-                v-model.number="amountPaid"
-                label="Amount Paid"
-                prefix="₱"
-                type="number"
-                outlined
-                @input="validateAmount"
-              ></v-text-field>
+              <v-text-field v-model="customer" label="Customer Name" outlined :placeholder="'Walk-in'"
+                class="mb-3"></v-text-field>
+              <v-text-field v-model="referenceNo" label="GCash Reference Number" outlined
+                :rules="[(v) => !!v || 'Reference number is required']"></v-text-field>
+              <v-text-field v-model.number="amountPaid" label="Amount Paid" prefix="₱" type="number" outlined
+                @input="validateAmount"></v-text-field>
             </v-tab-item>
 
             <v-tab-item>
-              <v-alert
-                v-if="selectedDebtor"
-                :type="debtorCreditAvailable ? 'success' : 'warning'"
-                dense
-                outlined
-                class="mb-3"
-              >
+              <v-alert v-if="selectedDebtor" :type="debtorCreditAvailable ? 'success' : 'warning'" dense outlined
+                class="mb-3">
                 <div class="d-flex justify-space-between">
-                  <span>Credit Limit:</span>
-                  <span>₱{{ selectedDebtor.creditLimit.toFixed(2) }}</span>
+                  <span>Available Credit:</span>
+                  <span>₱{{ selectedDebtor.availableCredit.toFixed(2) }}</span>
                 </div>
               </v-alert>
 
@@ -418,21 +267,11 @@
                 </p>
               </div>
 
-              <v-text-field
-                v-if="selectedDebtor"
-                :value="selectedDebtor.name"
-                label="Debtor Name"
-                outlined
-                readonly
-              ></v-text-field>
+              <v-text-field v-if="selectedDebtor" :value="selectedDebtor.name" label="Debtor Name" outlined
+                readonly></v-text-field>
 
-              <v-text-field
-                v-if="selectedDebtor"
-                :value="selectedDebtor.contact"
-                label="Contact"
-                outlined
-                readonly
-              ></v-text-field>
+              <v-text-field v-if="selectedDebtor" :value="selectedDebtor.contact" label="Contact" outlined
+                readonly></v-text-field>
             </v-tab-item>
           </v-tabs-items>
 
@@ -442,17 +281,11 @@
               <span class="text-subtitle-1">Amount Due:</span>
               <span class="text-subtitle-1">₱{{ total }}</span>
             </div>
-            <div
-              class="d-flex justify-space-between mb-2"
-              v-if="paymentTypes[paymentTab] !== 'Credit'"
-            >
+            <div class="d-flex justify-space-between mb-2" v-if="paymentTypes[paymentTab] !== 'Credit'">
               <span class="text-subtitle-1">Amount Tendered:</span>
               <span class="text-subtitle-1">₱{{ amountPaid.toFixed(2) }}</span>
             </div>
-            <div
-              class="d-flex justify-space-between"
-              v-if="paymentTypes[paymentTab] !== 'Credit'"
-            >
+            <div class="d-flex justify-space-between" v-if="paymentTypes[paymentTab] !== 'Credit'">
               <span class="text-h6">Change:</span>
               <span class="text-h6" :class="{ 'success--text': change > 0 }">
                 ₱{{ change }}
@@ -464,24 +297,15 @@
         <v-card-actions class="pa-4">
           <v-btn text @click="dialog = false">Cancel</v-btn>
           <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            :dark="isPaymentValid"
-            @click="processPayment"
-            :disabled="!isPaymentValid"
-            :loading="processingPayment"
-          >
+          <v-btn color="primary" :dark="isPaymentValid" @click="processPayment" :disabled="!isPaymentValid"
+            :loading="processingPayment">
             Complete Payment
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      :timeout="snackbar.timeout"
-    >
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="snackbar.timeout">
       {{ snackbar.text }}
       <template v-slot:action="{ attrs }">
         <v-btn text v-bind="attrs" @click="snackbar.show = false">
@@ -489,16 +313,22 @@
         </v-btn>
       </template>
     </v-snackbar>
+
+    <pay-debt-dialog v-model="showPayDebtDialog" :debtor="selectedDebtorForPayment"
+      @payment-success="handlePaymentSuccess" @payment-error="handlePaymentError" />
   </div>
 </template>
 
 <script>
 /* eslint-disable no-unused-vars */
 import { mapActions, mapState, mapMutations } from "vuex";
+import PayDebtDialog from "@/components/PayDebtDialog.vue";
 
 export default {
   name: "POS",
-
+  components: {
+    PayDebtDialog,
+  },
   data() {
     return {
       searchQuery: "",
@@ -574,6 +404,9 @@ export default {
         color: "success",
         timeout: 3000,
       },
+
+      showPayDebtDialog: false,
+      selectedDebtorForPayment: null,
     };
   },
 
@@ -621,7 +454,7 @@ export default {
 
     debtorCreditAvailable() {
       if (!this.selectedDebtor) return false;
-      const availableCredit = this.selectedDebtor.creditLimit;
+      const availableCredit = this.selectedDebtor.availableCredit;
       return availableCredit >= this.subTotal;
     },
   },
@@ -665,6 +498,26 @@ export default {
       addItem: "sale/addItem",
       getDebtorItems: "debtor/getDebtors",
     }),
+
+    openPayDebtDialog(debtor) {
+      this.selectedDebtorForPayment = debtor;
+      this.showPayDebtDialog = true;
+    },
+
+    async handlePaymentSuccess() {
+      await this.fetchDebtors();
+      this.showNotification("Payment processed successfully");
+      if (this.selectedDebtor) {
+        const updatedDebtor = this.debtors.find(
+          (d) => d._id === this.selectedDebtor._id
+        );
+        this.selectedDebtor = updatedDebtor;
+      }
+    },
+
+    handlePaymentError(error) {
+      this.showNotification("Error processing payment", "error");
+    },
 
     // UI Helpers
     showNotification(text, color = "success") {
@@ -873,7 +726,7 @@ export default {
       }
 
       this.dialog = true;
-      this.paymentTab = 0;
+      this.paymentTab = this.selectedDebtor ? 2 : 0;
       this.resetPaymentForm();
     },
 
@@ -902,9 +755,7 @@ export default {
       try {
         const paymentData = {
           paymentType: this.paymentType,
-          change: this.change,
           salesTotal: this.total,
-          amountReceived: this.amountPaid,
           customer: this.selectedDebtor?.name,
           debtorId: this.selectedDebtor?._id,
           referenceNo: this.referenceNo,
@@ -915,11 +766,16 @@ export default {
         };
 
         if (this.paymentType === "Credit" && this.selectedDebtor) {
+          paymentData.amountReceived = this.total;
+          paymentData.change = 0;
           paymentData.debtor = {
             id: this.selectedDebtor._id,
             name: this.selectedDebtor.name,
             creditLimit: this.selectedDebtor.creditLimit,
           };
+        } else {
+          paymentData.amountReceived = this.amountPaid;
+          paymentData.change = this.change;
         }
 
         await this.addItem(paymentData);

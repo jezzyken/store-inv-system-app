@@ -25,12 +25,17 @@ const getById = catchAsync(async (req, res, next) => {
 });
 
 const add = catchAsync(async (req, res) => {
-  const result = await service.add(req);
-  const data = {
-    success: true,
-    result,
-  };
-  return res.status(200).send(data);
+  try {
+    const result = await service.add(req);
+    const data = {
+      success: true,
+      result,
+    };
+    return res.status(200).send(data);
+  } catch (error) {
+    console.log(error)
+    return next(new AppError(error.message, 500));
+  }
 });
 
 const update = catchAsync(async (req, res, next) => {

@@ -73,6 +73,7 @@ router.get("/debtor/:id", async (req, res) => {
           discount: { $first: "$discount" },
           salesTotal: { $first: "$salesTotal" },
           paymentType: { $first: "$paymentType" },
+          paymentStatus: { $first: "$paymentStatus" },
           change: { $first: "$change" },
           grandTotal: { $first: "$grandTotal" },
           hasDelivery: { $first: "$hasDelivery" },
@@ -112,9 +113,6 @@ router.get("/debtor/:id", async (req, res) => {
     });
   }
 });
-
-module.exports = router;
-
 router.get("/:id/items", async (req, res) => {
   try {
     const items = await SaleItem.find({ sale: req.params.id }).populate(
