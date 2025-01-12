@@ -14,6 +14,7 @@
           </v-img>
         </v-avatar>
 
+
         <div class="profile-info ml-4">
           <h3 class="text-caption font-weight-bold mb-1 white--text">
             {{ fullName.toUpperCase() }}

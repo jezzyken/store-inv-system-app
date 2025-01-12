@@ -8,7 +8,9 @@
             <v-avatar size="80" color="primary" class="mb-4">
               <v-icon size="40" color="white">mdi-account</v-icon>
             </v-avatar>
-            <h1 class="text-h4 font-weight-bold primary--text mb-2">Welcome Back</h1>
+            <h1 class="text-h4 font-weight-bold primary--text mb-2">
+              Welcome Back
+            </h1>
             <p class="text-subtitle-1 grey--text">Please sign in to continue</p>
           </v-card-text>
 
@@ -46,15 +48,8 @@
                 required
               ></v-text-field>
 
-
               <!-- Error Alert -->
-              <v-alert
-                v-if="error"
-                type="error"
-                dense
-                text
-                class="mb-4"
-              >
+              <v-alert v-if="error" type="error" dense text class="mb-4">
                 {{ error }}
               </v-alert>
 
@@ -73,7 +68,6 @@
                 <v-icon left>mdi-login</v-icon>
                 Sign In
               </v-btn>
-
             </v-form>
           </v-card-text>
         </v-card>
@@ -83,80 +77,80 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions } from "vuex";
 
 export default {
-  name: 'LoginForm',
-  
+  name: "LoginForm",
+
   data() {
     return {
       formData: {
-        email: '',
-        password: ''
+        email: "",
+        password: "",
       },
       loading: false,
       error: null,
       showPassword: false,
       rememberMe: false,
       emailRules: [
-        v => !!v || 'Email is required',
-        v => /.+@.+\..+/.test(v) || 'Email must be valid'
+        (v) => !!v || "Email is required",
+        (v) => /.+@.+\..+/.test(v) || "Email must be valid",
       ],
       passwordRules: [
-        v => !!v || 'Password is required',
-        v => v.length >= 6 || 'Password must be at least 6 characters'
+        (v) => !!v || "Password is required",
+        (v) => v.length >= 6 || "Password must be at least 6 characters",
       ],
       socialLogins: [
-        { name: 'google', icon: 'mdi-google', color: 'red' },
-        { name: 'facebook', icon: 'mdi-facebook', color: 'blue' },
-        { name: 'twitter', icon: 'mdi-twitter', color: 'light-blue' }
-      ]
+        { name: "google", icon: "mdi-google", color: "red" },
+        { name: "facebook", icon: "mdi-facebook", color: "blue" },
+        { name: "twitter", icon: "mdi-twitter", color: "light-blue" },
+      ],
     };
   },
 
   methods: {
-    ...mapActions('users', ['login']),
+    ...mapActions("users", ["login"]),
 
     async handleLogin() {
       if (!this.$refs.loginForm.validate()) return;
-      
+
       this.loading = true;
       this.error = null;
-      
+
       try {
         const response = await this.login(this.formData);
-        
+
         if (response.success) {
-          this.$router.push('/dashboard');
+          this.$router.push("/admin/dashboard");
         } else {
-          this.error = response.message || 'Login failed';
+          this.error = response.message || "Login failed";
         }
       } catch (error) {
-        this.error = error.response?.data?.message || 'An error occurred';
+        this.error = error.response?.data?.message || "An error occurred";
       } finally {
         this.loading = false;
       }
     },
 
     forgotPassword() {
-      this.$router.push('/forgot-password');
+      this.$router.push("/forgot-password");
     },
 
     goToSignup() {
-      this.$router.push('/signup');
+      this.$router.push("/signup");
     },
 
     socialLogin(provider) {
       console.log(`Logging in with ${provider}`);
       // Implement social login logic here
-    }
+    },
   },
 
   created() {
-    if (this.$store.getters['users/isAuthenticated']) {
-      this.$router.push('/dashboard');
+    if (this.$store.getters["users/isAuthenticated"]) {
+      this.$router.push("/admin/dashboard");
     }
-  }
+  },
 };
 </script>
 
