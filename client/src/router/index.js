@@ -188,6 +188,12 @@ const routes = [
         component: () => import("@/views/SalesItemView"),
         meta: { requiresAuth: true },
       },
+      {
+        path: "/reports",
+        name: "Reports",
+        component: () => import("@/views/Reports/ReportView"),
+        meta: { requiresAuth: true },
+      },
       // ----end of sales----
 
       // ----POS----

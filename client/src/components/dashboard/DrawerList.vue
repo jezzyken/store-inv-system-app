@@ -160,6 +160,7 @@ export default {
             items: [],
             title: "Reports",
             appendIcon: "mdi-chevron-down",
+            route: "/reports",
           },
         ],
       },
