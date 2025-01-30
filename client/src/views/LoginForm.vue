@@ -121,7 +121,7 @@ export default {
         const response = await this.login(this.formData);
 
         if (response.success) {
-          this.$router.push("/admin/dashboard");
+          this.$router.push("/dashboard");
         } else {
           this.error = response.message || "Login failed";
         }
@@ -148,7 +148,7 @@ export default {
 
   created() {
     if (this.$store.getters["users/isAuthenticated"]) {
-      this.$router.push("/admin/dashboard");
+      this.$router.push("/dashboard");
     }
   },
 };
