@@ -226,6 +226,7 @@
                         min="1"
                         :max="item.availableStocks"
                         @input="validateQuantity(item)"
+                        @keypress="(event) => preventInvalidInput(event, item)"
                       ></v-text-field>
                       <v-btn
                         icon
@@ -526,7 +527,6 @@ export default {
     return {
       searchQuery: "",
       selectedCategory: 0,
-      categories: ["All", "Food", "Beverages", "Snacks", "Others"],
 
       products: [],
       filteredProducts: [],
@@ -605,7 +605,10 @@ export default {
   },
 
   computed: {
-    ...mapState(["drawer"]),
+    ...mapState({
+      drawer: (state) => state.drawer,
+      storeCategories: (state) => state.category.items,
+    }),
 
     drawer: {
       get() {
@@ -651,6 +654,10 @@ export default {
       const availableCredit = this.selectedDebtor.availableCredit;
       return availableCredit >= this.subTotal;
     },
+
+    categories() {
+      return ["All", ...this.storeCategories.map((cat) => cat.name)];
+    },
   },
 
   watch: {
@@ -691,6 +698,7 @@ export default {
       getProductItems: "product/getItems",
       addItem: "sale/addItem",
       getDebtorItems: "debtor/getDebtors",
+      getCategories: "category/getItem",
     }),
 
     openPayDebtDialog(debtor) {
@@ -734,19 +742,33 @@ export default {
 
     async fetchInitialData() {
       try {
-        await this.fetch();
+        await Promise.all([this.fetch(), this.fetchCategories()]);
         this.showNotification("Products loaded successfully");
       } catch (error) {
         this.showNotification("Error loading products", "error");
       }
     },
 
+    async fetchCategories() {
+      try {
+        const response = await this.getCategories();
+        if (response.success) {
+          this.$store.commit("category/SET_ITEM", response.result);
+        }
+      } catch (error) {
+        this.showNotification("Error loading categories", "error");
+      }
+    },
+
     filterProducts() {
       let filtered = [...this.products];
-
       if (this.selectedCategory > 0) {
+        console.log(this.selectedCategory);
+        console.log(this.categories[this.selectedCategory]);
         const category = this.categories[this.selectedCategory];
-        filtered = filtered.filter((product) => product.category === category);
+        filtered = filtered.filter(
+          (product) => product.category.name === category
+        );
       }
 
       if (this.searchQuery) {
@@ -934,6 +956,17 @@ export default {
       }
     },
 
+    preventInvalidInput(event, item) {
+      if (!/^\d*$/.test(event.key)) {
+        event.preventDefault();
+      }
+      
+      const newValue = parseInt(event.target.value + event.key);
+      if (newValue > item.availableStocks) {
+        event.preventDefault();
+      }
+    },
+
     resetPaymentForm() {
       this.amountPaid = 0;
       this.amountError = "";
@@ -977,7 +1010,7 @@ export default {
         this.receiptData = {
           date: new Date(),
           receiptNumber: response.receiptNumber || Date.now(),
-          cashier: "Cashier Name", 
+          cashier: "Cashier Name",
           items: this.cart.map((item) => ({
             name: item.name,
             quantity: item.quantity,
@@ -1015,6 +1048,8 @@ export default {
 
     async fetch() {
       const response = await this.getProductItems();
+
+      console.log({ data: response.result });
       this.products = response.result
         .map((product) => {
           if (product.type === "Variants" && product.variants?.length > 0) {

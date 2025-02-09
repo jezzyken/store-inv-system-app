@@ -35,6 +35,7 @@ const get = async () => {
 
 const getItems = async () => {
   const result = Models.aggregate([
+    ...createLookupStage("categories", "category", "_id", "category", true),
     {
       $addFields: {
         availableStocks: {
@@ -51,7 +52,6 @@ const getItems = async () => {
       },
     },
   ]);
-
   return result;
 };
 

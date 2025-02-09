@@ -120,8 +120,13 @@ export default {
       try {
         const response = await this.login(this.formData);
 
+        console.log(response)
         if (response.success) {
-          this.$router.push("/dashboard");
+          if(response.user.role === 'cashier'){
+            this.$router.push("/pos");
+          } else {
+            this.$router.push("/dashboard");
+          }
         } else {
           this.error = response.message || "Login failed";
         }

@@ -380,58 +380,61 @@ export default {
 
     async save() {
       try {
-        const formData = new FormData();
-        const itemToSave = { ...this.editedItem };
+      const formData = new FormData();
+      const itemToSave = { ...this.editedItem };
 
-        if (itemToSave.image instanceof File) {
-          formData.append("image", itemToSave.image);
+      if (itemToSave.image instanceof File) {
+        formData.append("image", itemToSave.image);
+      }
+
+      ["fname", "lname", "email", "role", "status"].forEach((key) => {
+        if (itemToSave[key]) {
+        formData.append(key, itemToSave[key]);
         }
+      });
 
-        ["fname", "lname", "email", "role", "status"].forEach((key) => {
-          if (itemToSave[key]) {
-            formData.append(key, itemToSave[key]);
-          }
+      if (this.editedIndex === -1 && itemToSave.password) {
+        formData.append("password", itemToSave.password);
+      }
+
+      let response;
+      if (this.editedIndex > -1) {
+        response = await this.updateUser({
+        id: itemToSave.id,
+        formData,
         });
+      } else {
+        response = await this.addUser(formData);
+      }
 
-        if (this.editedIndex === -1 && itemToSave.password) {
-          formData.append("password", itemToSave.password);
-        }
-
-        let response;
+      if (response.success) {
         if (this.editedIndex > -1) {
-          response = await this.updateUser({
-            id: itemToSave.id,
-            formData,
-          });
+        Object.assign(this.users[this.editedIndex], {
+          ...response.user,
+          fullName: `${response.user.fname} ${response.user.lname}`,
+        });
         } else {
-          response = await this.addUser(formData);
+        this.users.push({
+          ...response.user,
+          fullName: `${response.user.fname} ${response.user.lname}`,
+        });
         }
 
-        if (response.success) {
-          if (this.editedIndex > -1) {
-            Object.assign(this.users[this.editedIndex], {
-              ...response.user,
-              fullName: `${response.user.fname} ${response.user.lname}`,
-            });
-          } else {
-            this.users.push({
-              ...response.user,
-              fullName: `${response.user.fname} ${response.user.lname}`,
-            });
-          }
-
-          this.showSnackbar(
-            `User ${
-              this.editedIndex === -1 ? "created" : "updated"
-            } successfully`
-          );
-          this.close();
-        }
-      } catch (error) {
         this.showSnackbar(
-          error.response?.data?.message || "Error saving user",
-          "error"
+        `User ${
+          this.editedIndex === -1 ? "created" : "updated"
+        } successfully`
         );
+        this.initialize();
+        this.close();
+      }
+      } catch (error) {
+      this.showSnackbar(
+        error.response?.data?.message || "Error saving user",
+        "error"
+      );
+      } finally {
+      this.isLoading = false;
       }
     },
 
@@ -445,6 +448,7 @@ export default {
         if (response.success) {
           this.showSnackbar("Password updated successfully");
           this.closePasswordDialog();
+          this.initialize();
         }
       } catch (error) {
         this.showSnackbar(

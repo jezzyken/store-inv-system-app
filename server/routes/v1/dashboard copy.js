@@ -5,6 +5,7 @@ const Product = require('../../models/Product');
 const Debtor = require('../../models/Debtor');
 const SaleItem = require('../../models/SalesItem');
 
+// Get dashboard summary
 router.get('/summary', async (req, res) => {
   try {
     const today = new Date();
@@ -70,6 +71,7 @@ router.get('/summary', async (req, res) => {
   }
 });
 
+// Get sales statistics
 router.get('/sales-stats', async (req, res) => {
   try {
     const thirtyDaysAgo = new Date();
@@ -123,16 +125,17 @@ router.get('/top-products', async (req, res) => {
   }
 });
 
+// Get credit status summary
 router.get('/credit-summary', async (req, res) => {
   try {
     const debtorsSummary = await Debtor.aggregate([
       {
         $group: {
-          _id: null,
-          totalCreditLimit: { $sum: "$creditLimit" },
-          totalAvailableCredit: { $sum: "$availableCredit" },
-          averageCreditLimit: { $avg: "$creditLimit" },
-          totalDebtors: { $sum: 1 }
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" }
+          },
+          total: { $sum: "$salesTotal" }
         }
       }
     ]);
@@ -145,7 +148,7 @@ router.get('/credit-summary', async (req, res) => {
             year: { $year: "$date" },
             month: { $month: "$date" }
           },
-          total: { $sum: "$salesTotal" }  
+          total: { $sum: "$grandTotal" }
         }
       },
       { $sort: { "_id.year": -1, "_id.month": -1 } },
@@ -153,12 +156,7 @@ router.get('/credit-summary', async (req, res) => {
     ]);
 
     res.json({
-      debtorsSummary: debtorsSummary[0] || {
-        totalCreditLimit: 0,
-        totalAvailableCredit: 0,
-        averageCreditLimit: 0,
-        totalDebtors: 0
-      },
+      debtorsSummary: debtorsSummary[0] || { totalCreditLimit: 0, totalAvailableCredit: 0, averageCreditLimit: 0 },
       creditSalesByMonth
     });
   } catch (error) {
@@ -166,6 +164,7 @@ router.get('/credit-summary', async (req, res) => {
   }
 });
 
+// Get inventory status
 router.get('/inventory-status', async (req, res) => {
   try {
     const inventoryStats = await Product.aggregate([

@@ -14,7 +14,7 @@
           <div class="text-subtitle-1 font-weight-medium">
             {{ debtor.name }}
           </div>
-          <div class="caption">Outstanding Balance: ₱{{ debtor.balance }}</div>
+          <div class="caption">Outstanding Balance: ₱{{ balance }}</div>
           <div class="caption">Credit Limit: ₱{{ debtor.creditLimit }}</div>
         </div>
 
@@ -83,7 +83,6 @@ export default {
     value: Boolean,
     debtor: {
       type: Object,
-      required: true,
     },
   },
 
@@ -101,22 +100,29 @@ export default {
 
   computed: {
     isPaymentValid() {
-      if (this.amountPaid <= 0 || this.amountError) return false;
+      if (!this.amountPaid || this.amountPaid <= 0 || this.amountError)
+        return false;
 
       if (this.paymentTypes[this.paymentTab] === "Gcash") {
-        return this.referenceNo.length > 0;
+        return Boolean(this.referenceNo && this.referenceNo.length > 0);
       }
 
       return true;
+    },
+
+    balance() {
+      const creditLimit = Number(this.debtor?.creditLimit) || 0;
+      const availableCredit = Number(this.debtor?.availableCredit) || 0;
+      return Math.max(0, creditLimit - availableCredit);
     },
   },
 
   watch: {
     value(val) {
-      this.dialog = val;
+      this.dialog = Boolean(val);
     },
     dialog(val) {
-      this.$emit("input", val);
+      this.$emit("input", Boolean(val));
       if (!val) this.resetForm();
     },
   },
@@ -134,7 +140,7 @@ export default {
     validateAmount(amount) {
       if (amount < 0) {
         this.amountError = "Amount cannot be negative";
-      } else if (amount > this.debtor.balance) {
+      } else if (amount > this.balance) {
         this.amountError = "Amount exceeds outstanding balance";
       } else {
         this.amountError = "";

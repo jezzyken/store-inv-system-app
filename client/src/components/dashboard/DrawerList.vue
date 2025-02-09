@@ -178,6 +178,14 @@ export default {
         : "";
     },
     filteredItems() {
+      if (this.isAdmin) {
+        return this.items.map((item) => ({
+          ...item,
+          list: item.list.filter(
+            (subItem) => subItem.title !== "POS"
+          ),
+        }));
+      }
       if (!this.isAdmin) {
         return this.items.map((item) => ({
           ...item,

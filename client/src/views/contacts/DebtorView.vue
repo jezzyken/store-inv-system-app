@@ -65,6 +65,9 @@
                         outlined
                       ></v-text-field>
                     </v-col>
+                    <template v-slot:[`item.balance`]="{ item }">
+                      {{ item.creditLimit - item.availableCredit }}
+                    </template>
                     <v-col cols="12">
                       <v-text-field
                         v-model="editedItem.address"
@@ -120,7 +123,7 @@
 
           <v-list>
             <v-list-item
-              v-for="(action, i) in actions"
+              v-for="(action, i) in getAvailableActions(item)"
               :key="i"
               @click="handleAction(action.title, item)"
             >
@@ -162,6 +165,12 @@ export default {
         align: "start",
         sortable: false,
         value: "availableCredit",
+      },
+      {
+        text: "Balance",
+        align: "start",
+        sortable: false,
+        value: "balance",
       },
       {
         text: "Address",
@@ -232,12 +241,25 @@ export default {
       this.isLoading = true;
       try {
         const response = await this.getItems();
-        this.items = response;
+        this.items = response.map((item) => ({
+          ...item,
+          balance: item.creditLimit - item.availableCredit,
+        }));
       } catch (error) {
         console.error("Error fetching debtors:", error);
       } finally {
         this.isLoading = false;
       }
+    },
+
+    getAvailableActions(item) {
+      const balance = item.creditLimit - item.availableCredit;
+      return this.actions.filter((action) => {
+        if (action.title === "Delete" && balance > 0) {
+          return false;
+        }
+        return true;
+      });
     },
 
     editItem(item) {

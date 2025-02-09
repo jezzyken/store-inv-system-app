@@ -110,7 +110,7 @@ export default {
   props: {
     receipt: {
       type: Object,
-      required: true
+      required: false
     }
   },
   data() {

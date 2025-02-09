@@ -189,10 +189,10 @@
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn color="grey darken-1" text @click="saleDialogVisible = false">Close</v-btn>
-          <v-btn color="primary" @click="printReceipt">
+          <!-- <v-btn color="primary" @click="printReceipt">
             <v-icon left>mdi-printer</v-icon>
             Print
-          </v-btn>
+          </v-btn> -->
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -254,10 +254,10 @@
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn color="grey darken-1" text @click="paymentDialogVisible = false">Close</v-btn>
-          <v-btn color="primary" @click="printPaymentReceipt">
+          <!-- <v-btn color="primary" @click="printPaymentReceipt">
             <v-icon left>mdi-printer</v-icon>
             Print
-          </v-btn>
+          </v-btn> -->
         </v-card-actions>
       </v-card>
     </v-dialog>

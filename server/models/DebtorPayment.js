@@ -22,20 +22,37 @@ const debtorPaymentSchema = new mongoose.Schema(
     },
     referenceNumber: {
       type: String,
+      unique: true,
     },
     notes: {
       type: String,
     },
-    // user: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "User",
-    //   required: true,
-    // },
   },
   {
     timestamps: true,
   }
 );
+
+debtorPaymentSchema.pre("save", async function (next) {
+  if (!this.referenceNumber) {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    const count = await this.constructor.countDocuments({
+      createdAt: {
+        $gte: new Date(date.setHours(0, 0, 0, 0)),
+        $lt: new Date(date.setHours(23, 59, 59, 999)),
+      },
+    });
+
+    const sequence = String(count + 1).padStart(4, "0");
+
+    this.referenceNumber = `PAY-${year}${month}${day}-${sequence}`;
+  }
+  next();
+});
 
 const DebtorPayment = mongoose.model("DebtorPayment", debtorPaymentSchema);
 
