@@ -22,7 +22,7 @@
           <div class="text-subtitle-2 grey--text">{{ currentUser?.email }}</div>
           <v-chip
             x-small
-            :color="currentUser?.role === 'admin' ? 'primary' : 'secondary'"
+            :color="currentUser?.role === 'admin' ? 'warning ' : 'secondary'"
             class="mt-2"
             label
             dark
@@ -237,13 +237,13 @@ export default {
 
 <style scoped>
 .navigation-wrapper {
-  background: #0f172a; /* Darker blue-gray base */
+  background: #124829; /* Dark green base */
   height: 100%;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .profile-card {
-  background: linear-gradient(to right, #1e293b, #0f172a); /* Subtle gradient */
+  background: linear-gradient(to right, #1b6b3f, #124829);
 }
 
 .profile-info {
@@ -257,15 +257,15 @@ export default {
 }
 
 .menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.07);
+  background-color: rgba(241, 196, 15, 0.15); /* Yellow hover with transparency */
 }
 
 .menu-item--active {
-  background-color: rgba(59, 130, 246, 0.15) !important; /* Blue accent */
+  background-color: rgba(241, 196, 15, 0.15) !important;
 }
 
 .submenu-group {
-  background-color: rgba(15, 23, 42, 0.3); /* Darker with transparency */
+  background-color: rgba(18, 72, 41, 0.3);
 }
 
 .submenu-title {
@@ -278,19 +278,19 @@ export default {
 }
 
 .submenu-item:hover {
-  background-color: rgba(255, 255, 255, 0.07);
+  background-color: rgba(241, 196, 15, 0.15);
 }
 
 .v-list-item--active {
-  background-color: rgba(59, 130, 246, 0.15) !important; /* Blue accent */
+  background-color: rgba(241, 196, 15, 0.15) !important;
 }
 
 .v-list-item--active .v-list-item__title {
-  color: #60a5fa !important; /* Lighter blue for active text */
+  color: #f1c40f !important; /* Solid yellow for active text */
 }
 
 .v-list-item--active .v-icon {
-  color: #60a5fa !important; /* Lighter blue for active icons */
+  color: #f1c40f !important; /* Solid yellow for active icons */
 }
 
 .v-list-group__header.v-list-item--active {
@@ -300,7 +300,7 @@ export default {
 /* Custom Scrollbar */
 .navigation-menu {
   scrollbar-width: thin;
-  scrollbar-color: #334155 #0f172a; /* Improved contrast */
+  scrollbar-color: #1b6b3f #124829;
 }
 
 .navigation-menu::-webkit-scrollbar {
@@ -308,16 +308,15 @@ export default {
 }
 
 .navigation-menu::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #124829;
 }
 
 .navigation-menu::-webkit-scrollbar-thumb {
-  background-color: #334155;
+  background-color: #1b6b3f;
   border-radius: 3px;
 }
 
-/* Add subtle border for better separation */
 .v-list-group {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 </style>

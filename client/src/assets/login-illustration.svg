@@ -1,0 +1,32 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Decorative Leaves -->
+  <path d="M30 150 Q40 140, 50 150 T70 150" fill="none" stroke="#2ecc71" stroke-width="2"/>
+  <path d="M35 140 Q45 130, 55 140 T75 140" fill="none" stroke="#2ecc71" stroke-width="2"/>
+  <path d="M320 80 Q330 70, 340 80 T360 80" fill="none" stroke="#2ecc71" stroke-width="2"/>
+  
+  <!-- Phone -->
+  <rect x="150" y="50" width="100" height="180" rx="20" fill="#34495e"/>
+  <rect x="155" y="55" width="90" height="170" rx="18" fill="#fff"/>
+  <path d="M190 45 h20 v5 h-20 z" fill="#34495e"/> <!-- Notch -->
+  
+  <!-- Person -->
+  <!-- Head -->
+  <circle cx="200" cy="120" r="20" fill="#34495e"/>
+  
+  <!-- Body -->
+  <path d="M200 140 v40" stroke="#34495e" stroke-width="15"/>
+  
+  <!-- Arms -->
+  <path d="M200 160 l-20 20" stroke="#34495e" stroke-width="8"/>
+  <path d="M200 160 l20 20" stroke="#34495e" stroke-width="8"/>
+  
+  <!-- Legs -->
+  <path d="M200 180 l-15 30" stroke="#34495e" stroke-width="8"/>
+  <path d="M200 180 l15 30" stroke="#34495e" stroke-width="8"/>
+  
+  <!-- Decorative Elements -->
+  <circle cx="50" cy="200" r="5" fill="#2ecc71" opacity="0.5"/>
+  <circle cx="350" cy="100" r="5" fill="#2ecc71" opacity="0.5"/>
+  <circle cx="320" cy="180" r="3" fill="#2ecc71" opacity="0.5"/>
+  <circle cx="80" cy="80" r="3" fill="#2ecc71" opacity="0.5"/>
+</svg>

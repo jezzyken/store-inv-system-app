@@ -1,75 +1,76 @@
 <template>
-  <v-container class="fill-height" fluid>
+  <v-container class="fill-height" fluid style="background-color: #124829;">
     <v-row align="center" justify="center">
-      <v-col cols="12" sm="8" md="6" lg="4">
+      <v-col cols="12" sm="10" md="8" lg="6">
         <v-card class="login-card" elevation="8">
-          <!-- Logo/Brand Section -->
-          <v-card-text class="text-center pt-8">
-            <v-avatar size="80" color="primary" class="mb-4">
-              <v-icon size="40" color="white">mdi-account</v-icon>
-            </v-avatar>
-            <h1 class="text-h4 font-weight-bold primary--text mb-2">
-              Welcome Back
-            </h1>
-            <p class="text-subtitle-1 grey--text">Please sign in to continue</p>
-          </v-card-text>
+          <v-row no-gutters>
+            <!-- Left Column - Illustration Section -->
+            <v-col cols="12" md="6" class="pa-8 position-relative">
+              <div class="illustration-container">
+                <div class="blob-background"></div>
+                <v-img
+                  src="@/assets/store_logo.png"
+                  contain
+                  height="300"
+                  class="login-illustration"
+                ></v-img>
+              </div>
+            </v-col>
 
-          <v-card-text class="pt-4">
-            <v-form @submit.prevent="handleLogin" ref="loginForm">
-              <!-- Email Field -->
-              <v-text-field
-                v-model="formData.email"
-                label="Email"
-                type="email"
-                filled
-                rounded
-                dense
-                color="primary"
-                prepend-inner-icon="mdi-email"
-                :rules="emailRules"
-                class="mb-4"
-                required
-              ></v-text-field>
+            <!-- Right Column - Login Form -->
+            <v-col cols="12" md="6" class="pa-8">
+              <div class="mb-6">
+                <!-- <v-avatar size="64" class="mb-4">
+                  <v-img src="@/assets/store_logo.png"></v-img>
+                </v-avatar> -->
+                <h1 class="text-h4 font-weight-bold">Login</h1>
+              </div>
 
-              <!-- Password Field -->
-              <v-text-field
-                v-model="formData.password"
-                label="Password"
-                :type="showPassword ? 'text' : 'password'"
-                filled
-                rounded
-                dense
-                color="primary"
-                prepend-inner-icon="mdi-lock"
-                :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                @click:append="showPassword = !showPassword"
-                :rules="passwordRules"
-                class="mb-2"
-                required
-              ></v-text-field>
+              <v-form @submit.prevent="handleLogin" ref="loginForm">
+                <v-text-field
+                  v-model="formData.email"
+                  label="Username"
+                  outlined
+                  dense
+                  color="success"
+                  class="mb-4"
+                  prepend-inner-icon="mdi-account"
+                  required
+                ></v-text-field>
 
-              <!-- Error Alert -->
-              <v-alert v-if="error" type="error" dense text class="mb-4">
-                {{ error }}
-              </v-alert>
+                <v-text-field
+                  v-model="formData.password"
+                  label="Password"
+                  :type="showPassword ? 'text' : 'password'"
+                  outlined
+                  dense
+                  color="success"
+                  prepend-inner-icon="mdi-lock"
+                  :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  @click:append="showPassword = !showPassword"
+                  class="mb-2"
+                  required
+                ></v-text-field>
 
-              <!-- Login Button -->
-              <v-btn
-                block
-                x-large
-                rounded
-                color="primary"
-                height="50"
-                :loading="loading"
-                :disabled="loading"
-                @click="handleLogin"
-                class="mb-6"
-              >
-                <v-icon left>mdi-login</v-icon>
-                Sign In
-              </v-btn>
-            </v-form>
-          </v-card-text>
+                <div class="text-right mb-6">
+                  <a class="text-decoration-none grey--text text--darken-1">Forgot Password?</a>
+                </div>
+
+                <v-btn
+                  block
+                  x-large
+                  color="primary"
+                  height="44"
+                  :loading="loading"
+                  :disabled="loading"
+                  @click="handleLogin"
+                  class="rounded-lg"
+                >
+                  LOGIN
+                </v-btn>
+              </v-form>
+            </v-col>
+          </v-row>
         </v-card>
       </v-col>
     </v-row>
@@ -99,11 +100,6 @@ export default {
       passwordRules: [
         (v) => !!v || "Password is required",
         (v) => v.length >= 6 || "Password must be at least 6 characters",
-      ],
-      socialLogins: [
-        { name: "google", icon: "mdi-google", color: "red" },
-        { name: "facebook", icon: "mdi-facebook", color: "blue" },
-        { name: "twitter", icon: "mdi-twitter", color: "light-blue" },
       ],
     };
   },
@@ -140,15 +136,6 @@ export default {
     forgotPassword() {
       this.$router.push("/forgot-password");
     },
-
-    goToSignup() {
-      this.$router.push("/signup");
-    },
-
-    socialLogin(provider) {
-      console.log(`Logging in with ${provider}`);
-      // Implement social login logic here
-    },
   },
 
   created() {
@@ -161,16 +148,38 @@ export default {
 
 <style scoped>
 .login-card {
-  border-radius: 16px;
+  border-radius: 24px;
+  overflow: hidden;
 }
 
-.v-card__text {
-  padding: 24px 32px;
+.illustration-container {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@media (max-width: 600px) {
-  .v-card__text {
-    padding: 16px 24px;
+.blob-background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  background-color: rgba(46, 204, 113, 0.1);
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  z-index: 1;
+}
+
+.login-illustration {
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 960px) {
+  .illustration-container {
+    height: 300px;
   }
 }
 </style>
