@@ -38,14 +38,6 @@
           <div class="stat-group">
             <div class="stat-header">
               <span class="stat-label">Revenue Performance</span>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon small v-bind="attrs" v-on="on" color="grey">
-                    mdi-information
-                  </v-icon>
-                </template>
-                <span>Total revenue including taxes and fees</span>
-              </v-tooltip>
             </div>
 
             <div class="stat-content">
@@ -66,7 +58,7 @@
                   >
                 </div>
                 <div class="sub-stat">
-                  <span class="label">Sales Today</span>
+                  <span class="label">Sales from last 30 days</span>
                   <span class="value">{{ getTotalOrders }}</span>
                 </div>
               </div>
@@ -90,16 +82,18 @@
             <div class="stat-content">
               <div class="main-stat">
                 <span class="value">{{
-                  formatNumber(summary.totalProducts)
+                  formatNumber(inventoryStatus?.inventoryStats?.totalItems || 0)
                 }}</span>
-                <span class="trend">Active Products</span>
+                <span class="trend">Total Items</span>
               </div>
               <div class="sub-stats">
                 <div class="sub-stat">
                   <span class="label">Total Value</span>
                   <span class="value"
                     >₱{{
-                      formatNumber(inventoryStatus?.inventoryStats?.totalValue)
+                      formatNumber(
+                        inventoryStatus?.inventoryStats?.totalValue || 0
+                      )
                     }}</span
                   >
                 </div>
@@ -108,7 +102,7 @@
                   <span class="value"
                     >₱{{
                       formatNumber(
-                        inventoryStatus?.inventoryStats?.averagePrice
+                        inventoryStatus?.inventoryStats?.averagePrice || 0
                       )
                     }}</span
                   >
@@ -134,7 +128,7 @@
                 <span class="value"
                   >₱{{ formatNumber(summary.creditSales) }}</span
                 >
-                <span class="trend">Outstanding</span>
+                <span class="trend">Overall Used Credit</span>
               </div>
               <div class="sub-stats">
                 <div class="sub-stat">
@@ -190,10 +184,10 @@
               </div>
             </div>
             <v-spacer></v-spacer>
-            <v-btn color="primary" small text @click="viewAllInventory">
+            <!-- <v-btn color="primary" small text @click="viewAllInventory">
               View All
               <v-icon small class="ml-1">mdi-arrow-right</v-icon>
-            </v-btn>
+            </v-btn> -->
           </v-card-title>
           <v-divider></v-divider>
           <v-data-table
@@ -202,6 +196,20 @@
             :items-per-page="5"
             dense
           >
+            <template v-slot:item.name="{ item }">
+              <div>
+                {{ item.name }}
+                <div v-if="item.type === 'Variants' && item.variants">
+                  <div
+                    v-for="variant in item.variants"
+                    :key="variant.name"
+                    class="pl-4 grey--text text-caption"
+                  >
+                    {{ variant.name }}: {{ variant.stocks }}
+                  </div>
+                </div>
+              </div>
+            </template>
             <template v-slot:item.stocks="{ item }">
               <v-chip
                 small
@@ -246,13 +254,11 @@
             </v-list-item>
           </v-list>
         </v-card>
-
- 
       </v-col>
 
       <v-col cols="12" lg="3">
-               <!-- Credit Overview -->
-               <v-card elevation="2">
+        <!-- Credit Overview -->
+        <v-card elevation="2">
           <v-card-title class="py-4 px-6">
             <div>
               <div class="text-h6 font-weight-bold">Credit Overview</div>
@@ -338,7 +344,7 @@ export default {
     return {
       selectedPeriod: "month",
       lowStockHeaders: [
-        { text: "Product", value: "name" },
+        { text: "Product", value: "name", width: "50%" },
         { text: "Current Stock", value: "stocks", align: "center" },
         { text: "Alert Level", value: "stockAlert", align: "center" },
       ],
@@ -404,6 +410,26 @@ export default {
       return "success";
     },
 
+    getTotalStockValue(item) {
+      if (item.type === "Variants" && item.variants) {
+        return item.variants.reduce(
+          (total, variant) => total + variant.stocks * variant.cost,
+          0
+        );
+      }
+      return item.stocks * item.cost;
+    },
+
+    getFormattedStock(item) {
+      if (item.type === "Variants" && item.variants) {
+        return item.variants.reduce(
+          (total, variant) => total + variant.stocks,
+          0
+        );
+      }
+      return item.stocks;
+    },
+
     getCreditColor(percentage) {
       if (percentage >= 80) return "error";
       if (percentage >= 60) return "warning";
@@ -439,6 +465,18 @@ export default {
       "creditSummary",
       "inventoryStatus",
     ]),
+
+    totalInventoryValue() {
+      return this.inventoryStatus?.inventoryStats?.totalValue || 0;
+    },
+
+    averageItemValue() {
+      return this.inventoryStatus?.inventoryStats?.averagePrice || 0;
+    },
+
+    totalInventoryItems() {
+      return this.inventoryStatus?.inventoryStats?.totalItems || 0;
+    },
 
     chartData() {
       if (!this.salesStats.length) return null;
@@ -575,7 +613,6 @@ export default {
   }
 }
 
-/* Card hover effects */
 .performance-card:hover,
 .inventory-card:hover,
 .credit-card:hover,
@@ -694,7 +731,6 @@ export default {
   }
 }
 
-/* Responsive adjustments */
 @media (max-width: 960px) {
   .metric-value {
     font-size: 1.5rem !important;

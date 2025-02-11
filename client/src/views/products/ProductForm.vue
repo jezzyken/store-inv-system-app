@@ -116,6 +116,7 @@
                 type="number"
                 outlined
                 required
+                :disabled="mode !== 'add'"
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="6">
@@ -206,6 +207,7 @@
                           type="Initial Stocks"
                           outlined
                           required
+                          :disabled="mode !== 'add'"
                         ></v-text-field>
                       </td>
 

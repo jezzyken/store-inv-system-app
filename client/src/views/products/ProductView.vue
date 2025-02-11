@@ -227,7 +227,7 @@ export default {
     showFuck: false,
     selectedItems: {},
     actions: [
-      { title: "Product History" },
+      // { title: "Product History" },
       { title: "Edit" },
       { title: "Delete" },
     ],

@@ -59,11 +59,10 @@
           <thead>
             <tr>
               <th class="text-left">Product</th>
-              <!-- <th class="text-left">Product Code</th> -->
               <th class="text-left">Stocks</th>
               <th class="text-center">Quantity</th>
               <th class="text-left" width="20%">Type</th>
-              <th class="text-left">Actions</th>
+              <th class="text-left" v-if="mode === 'add'">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -76,7 +75,14 @@
               </td>
               <td>
                 <div class="d-flex justify-center">
-                  <v-btn dark color="#000033" small fab>
+                  <v-btn
+                    v-if="mode === 'add'"
+                    dark
+                    color="#000033"
+                    small
+                    fab
+                    @click="incrementQuantity(stock)"
+                  >
                     <v-icon>mdi-plus</v-icon>
                   </v-btn>
                   <div style="width: 75px">
@@ -86,9 +92,19 @@
                       outlined
                       hide-details
                       dense
-                    ></v-text-field>
-                  </div>
-                  <v-btn dark color="#000033" small fab>
+                      type="number"
+                      min="0"
+                      @input="validateQuantity($event, stock)"
+                      ></v-text-field>
+                    </div>
+                  <v-btn
+                    v-if="mode === 'add'"
+                    dark
+                    color="#000033"
+                    small
+                    fab
+                    @click="decrementQuantity(stock)"
+                  >
                     <v-icon>mdi-minus</v-icon>
                   </v-btn>
                 </div>
@@ -104,7 +120,7 @@
                   />
                 </div>
               </td>
-              <td>
+              <td v-if="mode === 'add'">
                 <v-btn dark color="error" small @click="onDeleteItem(stock, i)">
                   <v-icon>mdi-trash-can-outline</v-icon>
                 </v-btn>
@@ -128,11 +144,18 @@
     </v-sheet>
 
     <v-row justify="end" class="ma-0 mt-6">
-      <v-btn dark :color="buttonState.color" @click="buttonState.action">{{
-        buttonState.label
-      }}</v-btn>
+      <v-btn
+        v-if="mode === 'add'"
+        dark
+        :color="buttonState.color"
+        @click="buttonState.action"
+        :disabled="buttonState.disabled"
+      >
+        {{ buttonState.label }}
+      </v-btn>
       <div class="ma-1"></div>
-      <v-btn>clear</v-btn>
+      <v-btn v-if="mode === 'add'" @click="clearForm">Clear</v-btn>
+      <v-btn v-else @click="$router.go(-1)">Back</v-btn>
     </v-row>
   </v-container>
 </template>
@@ -153,6 +176,7 @@ export default {
         date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
           .toISOString()
           .substr(0, 10),
+        reason: "",
       },
       isLoading: false,
       category: [],
@@ -179,12 +203,14 @@ export default {
         color: "warning",
         action: this.onUpdateItem,
         label: "update",
+        disabled: !this.items.reason,
       };
       if (this.mode === "add") {
         state = {
           color: "#000033",
           action: this.onAddItem,
           label: "add",
+          disabled: !this.items.reason,
         };
       }
       return state;
@@ -207,6 +233,33 @@ export default {
       updateItem: "adjustment/updateItem",
       deleteItem: "stockItem/deleteItem",
     }),
+
+    validateQuantity(value, stock) {
+      const numericValue = value.toString().replace(/[^0-9]/g, "");
+      const validValue = Math.max(0, parseInt(numericValue) || 0);
+      stock.quantity = validValue;
+    },
+
+    incrementQuantity(stock) {
+      const currentValue = parseInt(stock.quantity) || 0;
+      stock.quantity = currentValue + 1;
+    },
+
+    decrementQuantity(stock) {
+      const currentValue = parseInt(stock.quantity) || 0;
+      stock.quantity = Math.max(0, currentValue - 1);
+    },
+
+    clearForm() {
+      this.items = {
+        stocks: [],
+        date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+          .toISOString()
+          .substr(0, 10),
+        reason: "",
+      };
+      this.deleteItemId = [];
+    },
 
     async initialize() {
       this.isLoading = true;
@@ -251,6 +304,8 @@ export default {
           name: item.name,
           availableStocks: item.stocks,
           product: item.productId,
+          quantity: 0,
+          operation: this.operationType[0],
         };
 
         if (item.type === "Variants") {
@@ -270,7 +325,7 @@ export default {
         reason: this.items.reason,
       };
       await this.addItem(data);
-      // this.$router.push("/adjustment");
+      this.$router.push("/adjustment");
     },
 
     async onUpdateItem() {

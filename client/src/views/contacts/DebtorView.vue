@@ -14,7 +14,7 @@
               v-model="search"
               filled
               rounded
-              dense
+              dense 
               hide-details
               placeholder="Search"
               append-icon="mdi-filter-variant"
@@ -47,6 +47,9 @@
                         v-model="editedItem.name"
                         label="Name"
                         outlined
+                        :rules="[v => !!v || 'Name is required']"
+                        required
+                        @input="validateForm"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12">
@@ -55,24 +58,19 @@
                         label="Credit Limit"
                         type="number"
                         outlined
+                        :rules="[v => !!v || 'Credit limit is required']"
+                        required
+                        @input="validateForm"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12">
-                      <v-text-field
-                        v-model="editedItem.availableCredit"
-                        label="Available Credit"
-                        type="number"
-                        outlined
-                      ></v-text-field>
-                    </v-col>
-                    <template v-slot:[`item.balance`]="{ item }">
-                      {{ item.creditLimit - item.availableCredit }}
-                    </template>
                     <v-col cols="12">
                       <v-text-field
                         v-model="editedItem.address"
                         label="Address"
                         outlined
+                        :rules="[v => !!v || 'Address is required']"
+                        required
+                        @input="validateForm"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12">
@@ -80,6 +78,10 @@
                         v-model="editedItem.contact"
                         label="Contact"
                         outlined
+                        :rules="contactRules"
+                        required
+                        placeholder="09123456789"
+                        @input="validateContact"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -89,23 +91,26 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+                <v-btn 
+                  color="blue darken-1" 
+                  text 
+                  @click="save"
+                  :disabled="!isFormValid"
+                >
+                  Save
+                </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
-              <v-card-title class="text-h5"
-                >Are you sure you want to delete this item?</v-card-title
-              >
+              <v-card-title class="text-h5">
+                Are you sure you want to delete this item?
+              </v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete"
-                  >Cancel</v-btn
-                >
-                <v-btn color="blue darken-1" text @click="deleteItemConfirm"
-                  >OK</v-btn
-                >
+                <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
+                <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
             </v-card>
@@ -147,6 +152,11 @@ export default {
     dialogDelete: false,
     search: "",
     isLoading: false,
+    isFormValid: false,
+    contactRules: [
+      v => !!v || 'Contact number is required',
+      v => /^09\d{9}$/.test(v) || 'Contact number must start with 09 and have 11 digits'
+    ],
     headers: [
       {
         text: "Name",
@@ -237,6 +247,22 @@ export default {
       updateItem: "debtor/updateDebtor",
     }),
 
+    validateContact(value) {
+      if (value) {
+        this.editedItem.contact = value.replace(/[^0-9]/g, '');
+      }
+      this.validateForm();
+    },
+
+    validateForm() {
+      this.isFormValid = 
+        this.editedItem.name &&
+        this.editedItem.creditLimit &&
+        this.editedItem.address &&
+        this.editedItem.contact &&
+        /^09\d{9}$/.test(this.editedItem.contact);
+    },
+
     async initialize() {
       this.isLoading = true;
       try {
@@ -266,6 +292,7 @@ export default {
       this.editedIndex = this.items.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
+      this.validateForm();
     },
 
     deleteItem(item) {
@@ -290,6 +317,7 @@ export default {
       this.$nextTick(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.editedIndex = -1;
+        this.isFormValid = false;
       });
     },
 
@@ -302,6 +330,8 @@ export default {
     },
 
     async save() {
+      if (!this.isFormValid) return;
+      
       try {
         if (this.editedIndex > -1) {
           await this.updateItem(this.editedItem);

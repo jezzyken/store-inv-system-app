@@ -28,7 +28,7 @@
               prepend-inner-icon="mdi-magnify"
             ></v-text-field>
           </v-col>
-          <v-col cols="auto">
+          <!-- <v-col cols="auto">
             <v-btn
               color="#000033"
               dark
@@ -40,7 +40,7 @@
               <v-icon left>mdi-plus</v-icon>
               New
             </v-btn>
-          </v-col>
+          </v-col> -->
         </v-row>
       </template>
 
@@ -123,7 +123,7 @@
     </v-dialog>
 
     <!-- Delete Dialog -->
-    <v-dialog v-model="dialogDelete" max-width="500px">
+    <!-- <v-dialog v-model="dialogDelete" max-width="500px">
       <v-card>
         <v-card-title class="headline">Delete Item</v-card-title>
         <v-card-text> Are you sure you want to delete this item? </v-card-text>
@@ -133,7 +133,7 @@
           <v-btn color="error" @click="deleteItemConfirm">Delete</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
   </v-container>
 </template>
 
@@ -192,8 +192,8 @@ export default {
     search: "",
     valid: true,
     actions: [
-      { title: "Edit", icon: "mdi-pencil" },
-      { title: "Delete", icon: "mdi-delete" },
+      { title: "View", icon: "mdi-pencil" },
+      // { title: "Delete", icon: "mdi-delete" },
     ],
   }),
 
@@ -275,7 +275,7 @@ export default {
 
     handleAction(action, item) {
       switch (action) {
-        case "Edit":
+        case "View":
           this.$router.push({ name: "EditSales", params: { id: item._id } });
           break;
         case "Delete":

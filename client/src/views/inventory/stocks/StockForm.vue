@@ -61,7 +61,7 @@
               <th class="text-left">Product</th>
               <th class="text-left">Stocks</th>
               <th class="text-center">Quantity</th>
-              <th class="text-left">Actions</th>
+              <th class="text-left" v-if="mode === 'add'">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -74,24 +74,28 @@
               </td>
               <td>
                 <div class="d-flex justify-center">
-                  <v-btn dark color="#000033" small fab>
+                  <v-btn dark color="#000033" small fab v-if="mode === 'add'">
                     <v-icon>mdi-plus</v-icon>
                   </v-btn>
                   <div style="width: 75px">
                     <v-text-field
-                      v-model="stock.quantity"
+                      v-model.number="stock.quantity"
                       class="text-center mx-2"
                       outlined
                       hide-details
                       dense
+                      type="number"
+                      min="0"
+                      @input="validateQuantity($event, stock)"
+                      @keypress="numberOnly($event)"
                     ></v-text-field>
                   </div>
-                  <v-btn dark color="#000033" small fab>
+                  <v-btn dark color="#000033" small fab v-if="mode === 'add'">
                     <v-icon>mdi-minus</v-icon>
                   </v-btn>
                 </div>
               </td>
-              <td>
+              <td v-if="mode === 'add'">
                 <v-btn dark color="error" small @click="onDeleteItem(stock, i)">
                   <v-icon>mdi-trash-can-outline</v-icon>
                 </v-btn>
@@ -123,11 +127,16 @@
     </v-sheet>
 
     <v-row justify="end" class="ma-0 mt-6">
-      <v-btn dark :color="buttonState.color" @click="buttonState.action">{{
-        buttonState.label
-      }}</v-btn>
+      <v-btn
+        v-if="mode === 'add'"
+        dark
+        :color="buttonState.color"
+        @click="buttonState.action"
+        >{{ buttonState.label }}</v-btn
+      >
       <div class="ma-1"></div>
-      <v-btn>clear</v-btn>
+      <v-btn v-if="mode === 'add'" @click="clearForm">Clear</v-btn>
+      <v-btn v-else @click="$router.go(-1)">Back</v-btn>
     </v-row>
   </v-container>
 </template>
@@ -293,6 +302,49 @@ export default {
           this.deleteItemId.push(stock.items_id);
         }
       }
+    },
+
+    validateQuantity(value, stock) {
+      let num = Number(value);
+      if (num < 0 || isNaN(num)) {
+        stock.quantity = 0;
+      } else {
+        stock.quantity = Math.floor(num);
+      }
+    },
+
+    numberOnly(evt) {
+      const keysAllowed = [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Enter",
+      ];
+      const keyPressed = evt.key;
+
+      if (!keysAllowed.includes(keyPressed)) {
+        evt.preventDefault();
+      }
+    },
+
+    clearForm() {
+      this.items = {
+        stocks: [],
+        date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+          .toISOString()
+          .substr(0, 10),
+      };
+      this.deleteItemId = [];
     },
 
     async fetch() {

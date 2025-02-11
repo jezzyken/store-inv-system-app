@@ -16,7 +16,7 @@ router.post("/", async (req, res) => {
 // Get all debtors
 router.get("/", async (req, res) => {
   try {
-    const debtors = await Debtor.find();
+    const debtors = await Debtor.find().sort({_id: -1});
     res.json(debtors);
   } catch (error) {
     res.status(500).json({ error: error.message });
