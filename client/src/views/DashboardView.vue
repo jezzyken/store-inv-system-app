@@ -53,20 +53,20 @@
                 <span class="value"
                   >₱{{ formatNumber(summary.todaySales) }}</span
                 >
-                <span class="trend success--text">
+                <!-- <span class="trend success--text">
                   <v-icon small color="success">mdi-arrow-up</v-icon>
                   12.5%
-                </span>
+                </span> -->
               </div>
               <div class="sub-stats">
                 <div class="sub-stat">
-                  <span class="label">Average Order</span>
+                  <span class="label">Average Sales</span>
                   <span class="value"
                     >₱{{ formatNumber(getAverageOrderValue) }}</span
                   >
                 </div>
                 <div class="sub-stat">
-                  <span class="label">Orders Today</span>
+                  <span class="label">Sales Today</span>
                   <span class="value">{{ getTotalOrders }}</span>
                 </div>
               </div>
