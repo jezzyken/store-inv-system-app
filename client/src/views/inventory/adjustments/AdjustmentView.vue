@@ -171,7 +171,7 @@ export default {
         align: "start",
         value: "noOfItems",
       },
-      { text: "Actions", value: "actions", sortable: false },
+      { text: "Options", value: "actions", sortable: false },
     ],
     desserts: [],
     editedIndex: -1,
@@ -192,7 +192,7 @@ export default {
     itemId: null,
     isLoading: false,
     search: "",
-    actions: [{ title: "Edit" }, { title: "Delete" }],
+    actions: [{ title: "View" }, { title: "Delete" }],
   }),
 
   computed: {
@@ -281,7 +281,7 @@ export default {
 
     handleAction(action, item) {
       switch (action) {
-        case "Edit":
+        case "View":
           this.$router.push({
             name: "EditAdjustment",
             params: { id: item._id },

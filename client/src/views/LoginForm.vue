@@ -52,9 +52,9 @@
                   required
                 ></v-text-field>
 
-                <div class="text-right mb-6">
+                <!-- <div class="text-right mb-6">
                   <a class="text-decoration-none grey--text text--darken-1">Forgot Password?</a>
-                </div>
+                </div> -->
 
                 <v-btn
                   block

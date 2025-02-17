@@ -219,11 +219,11 @@
     </v-sheet>
 
     <v-row justify="end" class="ma-0 mt-6">
-      <v-btn dark :color="buttonState.color" @click="buttonState.action">{{
+      <!-- <v-btn dark :color="buttonState.color" @click="buttonState.action">{{
         buttonState.label
       }}</v-btn>
-      <div class="ma-1"></div>
-      <v-btn>clear</v-btn>
+      <div class="ma-1"></div> -->
+      <v-btn @click="$router.go(-1)">back</v-btn>
     </v-row>
   </v-container>
 </template>

@@ -120,14 +120,14 @@
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field
+              <!-- <v-text-field
                 v-model="product.minimumSaleQty"
                 :rules="[rules.required]"
                 label="Minimum Sale Quantity"
                 type="number"
                 outlined
                 required
-              ></v-text-field>
+              ></v-text-field> -->
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field

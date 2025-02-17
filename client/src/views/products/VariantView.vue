@@ -170,7 +170,7 @@ export default {
         sortable: false,
         value: "isActive",
       },
-      { text: "Actions", value: "actions", sortable: false },
+      { text: "Options", value: "actions", sortable: false },
     ],
     items: [],
     editedIndex: -1,

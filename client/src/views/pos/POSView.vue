@@ -353,11 +353,7 @@
           </div>
 
           <v-tabs v-model="paymentTab" grow>
-            <v-tab
-              v-for="type in paymentTypes"
-              :key="type"
-              :disabled="type === 'Credit' && !selectedDebtor"
-            >
+            <v-tab v-for="type in paymentTypes" :key="type">
               <v-icon left>{{ getPaymentIcon(type) }}</v-icon>
               {{ type }}
             </v-tab>
@@ -537,7 +533,6 @@ export default {
       paymentType: null,
       amountPaid: 0,
       amountError: "",
-      paymentTypes: ["Cash", "Gcash", "Credit"],
       referenceNo: "",
       processingPayment: false,
 
@@ -588,7 +583,7 @@ export default {
         { text: "Qty", value: "quantity", align: "center", width: "20%" },
         { text: "Price", value: "price", align: "right", width: "15%" },
         { text: "Total", value: "total", align: "right", width: "15%" },
-        { text: "Actions", value: "actions", align: "center", width: "10%" },
+        { text: "Options", value: "actions", align: "center", width: "10%" },
       ],
 
       snackbar: {
@@ -609,6 +604,13 @@ export default {
       drawer: (state) => state.drawer,
       storeCategories: (state) => state.category.items,
     }),
+
+    paymentTypes() {
+      if (this.selectedDebtor) {
+        return ["Credit"];
+      }
+      return ["Cash", "Gcash"];
+    },
 
     drawer: {
       get() {
@@ -669,6 +671,14 @@ export default {
     selectedCategory: {
       handler: "filterProducts",
       immediate: true,
+    },
+
+    selectedDebtor(newVal) {
+      if (newVal) {
+        this.paymentTab = 0;
+      } else {
+        this.paymentTab = 0;
+      }
     },
 
     paymentTab(newVal) {
@@ -960,7 +970,7 @@ export default {
       if (!/^\d*$/.test(event.key)) {
         event.preventDefault();
       }
-      
+
       const newValue = parseInt(event.target.value + event.key);
       if (newValue > item.availableStocks) {
         event.preventDefault();

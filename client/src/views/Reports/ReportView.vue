@@ -387,7 +387,7 @@ export default {
         { text: "Payment", value: "paymentType" },
         { text: "Revenue", value: "totalRevenue", align: "right" },
         { text: "Profit", value: "profit", align: "right" },
-        { text: "Actions", value: "actions", sortable: false, width: "100px" },
+        { text: "Options", value: "actions", sortable: false, width: "100px" },
       ],
       inventoryHeaders: [
         { text: "Product", value: "name" },

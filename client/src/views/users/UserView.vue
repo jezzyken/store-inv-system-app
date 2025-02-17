@@ -57,7 +57,7 @@
                         v-model="editedItem.fname"
                         label="First Name*"
                         outlined
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.lettersOnly]"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" md="6">
@@ -65,7 +65,7 @@
                         v-model="editedItem.lname"
                         label="Last Name*"
                         outlined
-                        :rules="[rules.required]"
+                        :rules="[rules.required, rules.lettersOnly]"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" md="6">
@@ -82,8 +82,11 @@
                         v-model="editedItem.password"
                         label="Password*"
                         outlined
-                        type="password"
+                        :type="showPassword ? 'text' : 'password'"
                         :rules="[rules.required, rules.password]"
+                        required
+                        :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                        @click:append="showPassword = !showPassword"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" md="6">
@@ -92,6 +95,7 @@
                         :items="roles"
                         label="Role"
                         outlined
+                        required
                       ></v-select>
                     </v-col>
                     <v-col cols="12" md="6">
@@ -100,9 +104,10 @@
                         :items="statusOptions"
                         label="Status"
                         outlined
+                        required
                       ></v-select>
                     </v-col>
-                    <v-col cols="12">
+                    <!-- <v-col cols="12">
                       <v-file-input
                         v-model="editedItem.image"
                         label="Profile Image"
@@ -117,7 +122,7 @@
                           </v-avatar>
                         </template>
                       </v-file-input>
-                    </v-col>
+                    </v-col> -->
                   </v-row>
                 </v-container>
               </v-card-text>
@@ -125,7 +130,14 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+                <v-btn
+                  color="blue darken-1"
+                  text
+                  @click="save"
+                  :disabled="!isFormValid"
+                >
+                  Save
+                </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -144,8 +156,12 @@
                         v-model="newPassword"
                         label="New Password*"
                         outlined
-                        type="password"
+                        :type="showNewPassword ? 'text' : 'password'"
                         :rules="[rules.required, rules.password]"
+                        :append-icon="
+                          showNewPassword ? 'mdi-eye' : 'mdi-eye-off'
+                        "
+                        @click:append="showNewPassword = !showNewPassword"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -193,7 +209,7 @@
 
           <v-list>
             <v-list-item
-              v-for="(action, i) in actions"
+              v-for="(action, i) in getActions(item)"
               :key="i"
               @click="handleAction(action.title, item)"
             >
@@ -258,7 +274,7 @@ export default {
         sortable: true,
         value: "status",
       },
-      { text: "Actions", value: "actions", sortable: false },
+      { text: "Options", value: "actions", sortable: false },
     ],
     users: [],
     editedIndex: -1,
@@ -299,10 +315,13 @@ export default {
     },
     rules: {
       required: (v) => !!v || "This field is required",
+      lettersOnly: (v) => /^[A-Za-z]+$/.test(v) || "Only letters are allowed",
       email: (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
       password: (v) =>
         v.length >= 6 || "Password must be at least 6 characters",
     },
+    showPassword: false,
+    showNewPassword: false,
   }),
 
   computed: {
@@ -314,6 +333,40 @@ export default {
         return URL.createObjectURL(this.editedItem.image);
       }
       return this.editedItem.image || this.defaultAvatar;
+    },
+
+    isFormValid() {
+      const requiredFields = ["fname", "lname", "email", "role", "status"];
+      const hasAllRequired = requiredFields.every(
+        (field) => !!this.editedItem[field]
+      );
+      const hasPassword =
+        this.editedIndex === -1 ? !!this.editedItem.password : true;
+      const emailValid = /.+@.+\..+/.test(this.editedItem.email);
+      const namesValid =
+        /^[A-Za-z]+$/.test(this.editedItem.fname) &&
+        /^[A-Za-z]+$/.test(this.editedItem.lname);
+      const passwordValid =
+        this.editedIndex === -1 ? this.editedItem.password?.length >= 6 : true;
+      return (
+        hasAllRequired &&
+        hasPassword &&
+        emailValid &&
+        namesValid &&
+        passwordValid
+      );
+    },
+    getActions() {
+      return (item) => {
+        const baseActions = [{ title: "Edit" }, { title: "Change Password" }];
+
+        // Only add Delete action if not admin user
+        if (item.email !== "admin@admin.com") {
+          baseActions.push({ title: "Delete" });
+        }
+
+        return baseActions;
+      };
     },
   },
 
@@ -380,61 +433,61 @@ export default {
 
     async save() {
       try {
-      const formData = new FormData();
-      const itemToSave = { ...this.editedItem };
+        const formData = new FormData();
+        const itemToSave = { ...this.editedItem };
 
-      if (itemToSave.image instanceof File) {
-        formData.append("image", itemToSave.image);
-      }
-
-      ["fname", "lname", "email", "role", "status"].forEach((key) => {
-        if (itemToSave[key]) {
-        formData.append(key, itemToSave[key]);
+        if (itemToSave.image instanceof File) {
+          formData.append("image", itemToSave.image);
         }
-      });
 
-      if (this.editedIndex === -1 && itemToSave.password) {
-        formData.append("password", itemToSave.password);
-      }
-
-      let response;
-      if (this.editedIndex > -1) {
-        response = await this.updateUser({
-        id: itemToSave.id,
-        formData,
+        ["fname", "lname", "email", "role", "status"].forEach((key) => {
+          if (itemToSave[key]) {
+            formData.append(key, itemToSave[key]);
+          }
         });
-      } else {
-        response = await this.addUser(formData);
-      }
 
-      if (response.success) {
+        if (this.editedIndex === -1 && itemToSave.password) {
+          formData.append("password", itemToSave.password);
+        }
+
+        let response;
         if (this.editedIndex > -1) {
-        Object.assign(this.users[this.editedIndex], {
-          ...response.user,
-          fullName: `${response.user.fname} ${response.user.lname}`,
-        });
+          response = await this.updateUser({
+            id: itemToSave.id,
+            formData,
+          });
         } else {
-        this.users.push({
-          ...response.user,
-          fullName: `${response.user.fname} ${response.user.lname}`,
-        });
+          response = await this.addUser(formData);
         }
 
-        this.showSnackbar(
-        `User ${
-          this.editedIndex === -1 ? "created" : "updated"
-        } successfully`
-        );
-        this.initialize();
-        this.close();
-      }
+        if (response.success) {
+          if (this.editedIndex > -1) {
+            Object.assign(this.users[this.editedIndex], {
+              ...response.user,
+              fullName: `${response.user.fname} ${response.user.lname}`,
+            });
+          } else {
+            this.users.push({
+              ...response.user,
+              fullName: `${response.user.fname} ${response.user.lname}`,
+            });
+          }
+
+          this.showSnackbar(
+            `User ${
+              this.editedIndex === -1 ? "created" : "updated"
+            } successfully`
+          );
+          this.initialize();
+          this.close();
+        }
       } catch (error) {
-      this.showSnackbar(
-        error.response?.data?.message || "Error saving user",
-        "error"
-      );
+        this.showSnackbar(
+          error.response?.data?.message || "Error saving user",
+          "error"
+        );
       } finally {
-      this.isLoading = false;
+        this.isLoading = false;
       }
     },
 
@@ -499,6 +552,7 @@ export default {
 
     close() {
       this.dialog = false;
+      this.showPassword = false;
       this.$nextTick(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.editedIndex = -1;
@@ -509,6 +563,7 @@ export default {
       this.passwordDialog = false;
       this.newPassword = "";
       this.selectedUserId = null;
+      this.showNewPassword = false;
     },
 
     closeDelete() {

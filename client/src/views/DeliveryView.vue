@@ -151,7 +151,7 @@ export default {
         sortable: false,
         value: "status",
       },
-      { text: "Actions", value: "actions", sortable: false },
+      { text: "Options", value: "actions", sortable: false },
     ],
     desserts: [],
     editedIndex: -1,

@@ -157,7 +157,7 @@ export default {
         align: "start",
         value: "address",
       },
-      { text: "Actions", value: "actions", sortable: false },
+      { text: "Options", value: "actions", sortable: false },
     ],
     desserts: [],
     editedIndex: -1,

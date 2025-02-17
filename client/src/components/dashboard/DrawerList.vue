@@ -116,8 +116,8 @@ export default {
           {
             action: "mdi-package-up",
             items: [
-              { title: "Stocks", route: "/stock" },
-              { title: "Adjustments", route: "/adjustment" },
+              // { title: "Stocks", route: "/stock" },
+              { title: "Stocks", route: "/adjustment" },
             ],
             title: "Inventory",
             appendIcon: "mdi-chevron-down",

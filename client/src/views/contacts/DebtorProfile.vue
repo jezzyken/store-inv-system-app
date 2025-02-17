@@ -14,13 +14,16 @@
                 <v-list-item-content>
                   <v-list-item-subtitle class="text-caption mb-1">{{
                     key
-                    }}</v-list-item-subtitle>
+                  }}</v-list-item-subtitle>
                   <v-list-item-title class="font-weight-medium">
-                    <span v-if="
-                      key === 'Credit Limit' ||
-                      key === 'Available Credit' ||
-                      key === 'Balance'
-                    ">₱</span>
+                    <span
+                      v-if="
+                        key === 'Credit Limit' ||
+                        key === 'Available Credit' ||
+                        key === 'Balance'
+                      "
+                      >₱</span
+                    >
                     <template v-if="key === 'Balance'">
                       {{
                         formatNumber(
@@ -57,44 +60,78 @@
               <v-card flat>
                 <v-card-title class="px-4 py-3">
                   <v-spacer></v-spacer>
-                  <v-text-field v-model="salesSearch" prepend-inner-icon="mdi-magnify" label="Search sales" dense
-                    outlined hide-details class="shrink mt-1" style="max-width: 300px"></v-text-field>
+                  <v-text-field
+                    v-model="salesSearch"
+                    prepend-inner-icon="mdi-magnify"
+                    label="Search"
+                    dense
+                    outlined
+                    hide-details
+                    class="shrink mt-1"
+                    style="max-width: 300px"
+                  ></v-text-field>
                 </v-card-title>
 
-                <v-data-table :headers="salesHeaders" :items="salesHistory" :search="salesSearch"
-                  :loading="loadingSales" :items-per-page="10" class="elevation-0">
+                <v-data-table
+                  :headers="salesHeaders"
+                  :items="salesHistory"
+                  :search="salesSearch"
+                  :loading="loadingSales"
+                  :items-per-page="10"
+                  class="elevation-0"
+                >
                   <template v-slot:loading>
-                    <v-skeleton-loader type="table-row" class="pa-4"></v-skeleton-loader>
+                    <v-skeleton-loader
+                      type="table-row"
+                      class="pa-4"
+                    ></v-skeleton-loader>
                   </template>
 
                   <template v-slot:[`item.date`]="{ item }">
                     <span class="font-weight-medium">{{
                       formatDate(item.date)
-                      }}</span>
+                    }}</span>
                   </template>
 
                   <template v-slot:[`item.salesTotal`]="{ item }">
-                    <span class="success--text font-weight-medium">₱{{ formatNumber(item.salesTotal) }}</span>
+                    <span class="success--text font-weight-medium"
+                      >₱{{ formatNumber(item.salesTotal) }}</span
+                    >
                   </template>
 
                   <template v-slot:[`item.amountReceived`]="{ item }">
-                    <span :class="getPaymentStatusColor(item)">₱{{ formatNumber(item.amountReceived) }}</span>
+                    <span :class="getPaymentStatusColor(item)"
+                      >₱{{ formatNumber(item.amountReceived) }}</span
+                    >
                   </template>
 
                   <template v-slot:[`item.paymentType`]="{ item }">
-                    <v-chip small :color="getPaymentTypeColor(item.paymentType)" text-color="white">
+                    <v-chip
+                      small
+                      :color="getPaymentTypeColor(item.paymentType)"
+                      text-color="white"
+                    >
                       {{ item.paymentType }}
                     </v-chip>
                   </template>
 
                   <template v-slot:[`item.paymentStatus`]="{ item }">
-                    <v-chip small :color="getPaymentStatusChipColor(item.paymentStatus)" text-color="white">
+                    <v-chip
+                      small
+                      :color="getPaymentStatusChipColor(item.paymentStatus)"
+                      text-color="white"
+                    >
                       {{ item.paymentStatus }}
                     </v-chip>
                   </template>
 
                   <template v-slot:[`item.actions`]="{ item }">
-                    <v-btn small outlined color="primary" @click="viewSaleDetails(item)">
+                    <v-btn
+                      small
+                      outlined
+                      color="primary"
+                      @click="viewSaleDetails(item)"
+                    >
                       <v-icon left small>mdi-eye</v-icon>
                       Details
                     </v-btn>
@@ -107,14 +144,31 @@
               <v-card flat>
                 <v-card-title class="px-4 py-3">
                   <v-spacer></v-spacer>
-                  <v-text-field v-model="paymentSearch" prepend-inner-icon="mdi-magnify" label="Search payments" dense
-                    outlined hide-details class="shrink mt-1" style="max-width: 300px"></v-text-field>
+                  <v-text-field
+                    v-model="paymentSearch"
+                    prepend-inner-icon="mdi-magnify"
+                    label="Search payments"
+                    dense
+                    outlined
+                    hide-details
+                    class="shrink mt-1"
+                    style="max-width: 300px"
+                  ></v-text-field>
                 </v-card-title>
 
-                <v-data-table :headers="paymentHeaders" :items="debtorPayments" :search="paymentSearch"
-                  :loading="loadingPayments" :items-per-page="10" class="elevation-0">
+                <v-data-table
+                  :headers="paymentHeaders"
+                  :items="debtorPayments"
+                  :search="paymentSearch"
+                  :loading="loadingPayments"
+                  :items-per-page="10"
+                  class="elevation-0"
+                >
                   <template v-slot:loading>
-                    <v-skeleton-loader type="table-row" class="pa-4"></v-skeleton-loader>
+                    <v-skeleton-loader
+                      type="table-row"
+                      class="pa-4"
+                    ></v-skeleton-loader>
                   </template>
 
                   <template v-slot:[`item.paymentDate`]="{ item }">
@@ -122,17 +176,28 @@
                   </template>
 
                   <template v-slot:[`item.amount`]="{ item }">
-                    <span class="success--text">₱{{ formatNumber(item.amount) }}</span>
+                    <span class="success--text"
+                      >₱{{ formatNumber(item.amount) }}</span
+                    >
                   </template>
 
                   <template v-slot:[`item.paymentMethod`]="{ item }">
-                    <v-chip small :color="getPaymentMethodColor(item.paymentMethod)" text-color="white">
+                    <v-chip
+                      small
+                      :color="getPaymentMethodColor(item.paymentMethod)"
+                      text-color="white"
+                    >
                       {{ item.paymentMethod }}
                     </v-chip>
                   </template>
 
                   <template v-slot:[`item.actions`]="{ item }">
-                    <v-btn small outlined color="primary" @click="viewPaymentDetails(item)">
+                    <v-btn
+                      small
+                      outlined
+                      color="primary"
+                      @click="viewPaymentDetails(item)"
+                    >
                       <v-icon left small>mdi-eye</v-icon>
                       Details
                     </v-btn>
@@ -157,8 +222,12 @@
         </v-card-title>
 
         <v-card-text class="pa-4">
-          <v-data-table :headers="saleDetailHeaders" :items="selectedSaleItems" hide-default-footer
-            class="elevation-1 mb-4">
+          <v-data-table
+            :headers="saleDetailHeaders"
+            :items="selectedSaleItems"
+            hide-default-footer
+            class="elevation-1 mb-4"
+          >
             <template v-slot:[`item.product.name`]="{ item }">
               {{ getProductName(item) }}
             </template>
@@ -180,7 +249,9 @@
             <v-col cols="12" sm="4">
               <div class="d-flex justify-space-between">
                 <span class="text-subtitle-1">Total:</span>
-                <span class="text-h6 primary--text">₱{{ formatNumber(calculateTotal) }}</span>
+                <span class="text-h6 primary--text"
+                  >₱{{ formatNumber(calculateTotal) }}</span
+                >
               </div>
             </v-col>
           </v-row>
@@ -188,7 +259,9 @@
 
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn color="grey darken-1" text @click="saleDialogVisible = false">Close</v-btn>
+          <v-btn color="grey darken-1" text @click="saleDialogVisible = false"
+            >Close</v-btn
+          >
           <!-- <v-btn color="primary" @click="printReceipt">
             <v-icon left>mdi-printer</v-icon>
             Print
@@ -212,16 +285,20 @@
           <v-list>
             <v-list-item>
               <v-list-item-content>
-                <v-list-item-subtitle class="text-caption">Date</v-list-item-subtitle>
+                <v-list-item-subtitle class="text-caption"
+                  >Date</v-list-item-subtitle
+                >
                 <v-list-item-title>{{
                   formatDate(selectedPayment?.paymentDate)
-                  }}</v-list-item-title>
+                }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
 
             <v-list-item>
               <v-list-item-content>
-                <v-list-item-subtitle class="text-caption">Amount</v-list-item-subtitle>
+                <v-list-item-subtitle class="text-caption"
+                  >Amount</v-list-item-subtitle
+                >
                 <v-list-item-title class="success--text">
                   ₱{{ formatNumber(selectedPayment?.amount) }}
                 </v-list-item-title>
@@ -230,10 +307,17 @@
 
             <v-list-item>
               <v-list-item-content>
-                <v-list-item-subtitle class="text-caption">Payment Method</v-list-item-subtitle>
+                <v-list-item-subtitle class="text-caption"
+                  >Payment Method</v-list-item-subtitle
+                >
                 <v-list-item-title>
-                  <v-chip small :color="getPaymentMethodColor(selectedPayment?.paymentMethod)
-                    " text-color="white">
+                  <v-chip
+                    small
+                    :color="
+                      getPaymentMethodColor(selectedPayment?.paymentMethod)
+                    "
+                    text-color="white"
+                  >
                     {{ selectedPayment?.paymentMethod }}
                   </v-chip>
                 </v-list-item-title>
@@ -242,10 +326,12 @@
 
             <v-list-item v-if="selectedPayment?.notes">
               <v-list-item-content>
-                <v-list-item-subtitle class="text-caption">Notes</v-list-item-subtitle>
+                <v-list-item-subtitle class="text-caption"
+                  >Notes</v-list-item-subtitle
+                >
                 <v-list-item-title>{{
                   selectedPayment?.notes
-                  }}</v-list-item-title>
+                }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -253,7 +339,12 @@
 
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn color="grey darken-1" text @click="paymentDialogVisible = false">Close</v-btn>
+          <v-btn
+            color="grey darken-1"
+            text
+            @click="paymentDialogVisible = false"
+            >Close</v-btn
+          >
           <!-- <v-btn color="primary" @click="printPaymentReceipt">
             <v-icon left>mdi-printer</v-icon>
             Print
@@ -300,8 +391,8 @@ export default {
       { text: "Total", value: "salesTotal", width: "15%" },
       { text: "Received", value: "amountReceived", width: "15%" },
       { text: "Payment Type", value: "paymentType", width: "15%" },
-      { text: "Status", value: "paymentStatus", width: "15%" },
-      { text: "Actions", value: "actions", sortable: false, width: "10%" },
+      // { text: "Status", value: "paymentStatus", width: "15%" },
+      { text: "Options", value: "actions", sortable: false, width: "10%" },
     ],
 
     saleDetailHeaders: [
@@ -317,7 +408,7 @@ export default {
       { text: "Amount", value: "amount", width: "20%" },
       { text: "Method", value: "paymentMethod", width: "20%" },
       { text: "Notes", value: "notes", width: "10%" },
-      { text: "Actions", value: "actions", sortable: false, width: "10%" },
+      { text: "Options", value: "actions", sortable: false, width: "10%" },
     ],
   }),
 
