@@ -98,14 +98,14 @@
                   >
                 </div>
                 <div class="sub-stat">
-                  <span class="label">Avg. Item Value</span>
+                  <!-- <span class="label">Avg. Item Value</span>
                   <span class="value"
                     >₱{{
                       formatNumber(
                         inventoryStatus?.inventoryStats?.averagePrice || 0
                       )
                     }}</span
-                  >
+                  > -->
                 </div>
               </div>
             </div>

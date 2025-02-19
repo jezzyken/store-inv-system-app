@@ -172,6 +172,28 @@ export default {
         };
 
         await this.$store.dispatch("debtorPayment/addPayment", paymentData);
+        const receiptData = {
+          date: new Date(),
+          receiptNumber: Date.now(),
+          customer: this.debtor.name,
+          items: [
+            {
+              name: "Debt Payment",
+              quantity: 1,
+              price: this.amountPaid,
+              total: this.amountPaid,
+            },
+          ],
+          subtotal: this.amountPaid,
+          total: this.amountPaid,
+          paymentType: this.paymentTypes[this.paymentTab],
+          amountPaid: this.amountPaid,
+          change: 0,
+          referenceNo: this.referenceNo,
+        };
+
+        // Print receipt
+        this.$emit("print-receipt", receiptData);
         this.$emit("payment-success");
         this.closeDialog();
       } catch (error) {

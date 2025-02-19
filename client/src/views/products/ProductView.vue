@@ -1,165 +1,106 @@
 <template>
   <v-container>
     <ViewProductDialogVue ref="product" :items="selectedItems" />
-
     <v-data-table
       :headers="headers"
       :items="items"
       :loading="isLoading"
       class="elevation-1 mt-4"
       :search="search"
+      :items-per-page="10"
+      multi-sort
+      :footer-props="{
+        'items-per-page-options': [10, 25, 50],
+        showFirstLastPage: true,
+      }"
     >
       <template v-slot:top>
         <v-toolbar flat>
-          <div style="width: 400px">
-            <v-text-field
-              v-model="search"
-              filled
-              rounded
-              dense
-              hide-details
-              placeholder="Search"
-              append-icon="mdi-filter-variant"
-              @click:append="testToggle"
-            ></v-text-field>
-          </div>
-          <v-spacer></v-spacer>
-          <v-dialog v-model="dialog" max-width="500px">
-            <template v-slot:activator="{}">
+          <v-row align="center" no-gutters>
+            <v-col cols="4">
+              <v-text-field
+                v-model="search"
+                filled
+                rounded
+                dense
+                hide-details
+                placeholder="Search products..."
+                prepend-inner-icon="mdi-magnify"
+                clearable
+              ></v-text-field>
+            </v-col>
+            <v-col cols="8" class="d-flex justify-end">
               <v-btn
-                color="#000033"
+                color="primary"
                 dark
-                class="mb-2"
+                class="mr-2"
                 :to="{ name: 'AddProduct' }"
-                small
               >
-                new
+                <v-icon left>mdi-plus</v-icon>
+                Add Product
               </v-btn>
-              <!-- <v-btn color="#000033" dark class="mb-2 mr-1" small>
-                export
-                <v-icon right dark> mdi-export </v-icon>
-              </v-btn>
-              <v-btn color="#000033" dark class="mb-2 mr-1" small>
-                print
-                <v-icon right dark> mdi-printer </v-icon>
+              <!-- <v-btn color="success" @click="exportTable">
+                <v-icon left>mdi-file-export</v-icon>
+                Export
               </v-btn> -->
-            </template>
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">{{ formTitle }}</span>
-              </v-card-title>
-
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-text-field
-                        v-model="editedItem.name"
-                        label="Name"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-text-field
-                        v-model="editedItem.company"
-                        label="Company"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-text-field
-                        v-model="editedItem.email"
-                        label="Email"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-text-field
-                        v-model="editedItem.contactNo"
-                        label="Contact No"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-text-field
-                        v-model="editedItem.address"
-                        label="Address"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
-
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="close">
-                  Cancel
-                </v-btn>
-                <v-btn color="blue darken-1" text @click="save"> Save </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-dialog v-model="dialogDelete" max-width="500px">
-            <v-card>
-              <v-card-title class="text-h5"
-                >Are you sure you want to delete this item?</v-card-title
-              >
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete"
-                  >Cancel</v-btn
-                >
-                <v-btn color="blue darken-1" text @click="deleteItemConfirm"
-                  >OK</v-btn
-                >
-                <v-spacer></v-spacer>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
+            </v-col>
+          </v-row>
         </v-toolbar>
       </template>
 
       <template v-slot:[`item.image`]="{ item }">
-        <div class="ma-1">
+        <v-hover v-slot="{ hover }">
           <v-img
-            :lazy-src="item.image"
-            max-height="50"
-            max-width="50"
-            :src="item.image"
-          ></v-img>
-        </div>
+            :src="
+              item.type === 'Variants' ? item.variants[0].image : item.image
+            "
+            max-height="60"
+            max-width="60"
+            :class="{ 'on-hover': hover }"
+            class="mx-auto"
+          >
+            <v-fade-transition>
+              <v-overlay v-if="hover" absolute>
+                <v-btn small @click="showFullImage(item)"> View </v-btn>
+              </v-overlay>
+            </v-fade-transition>
+          </v-img>
+        </v-hover>
+      </template>
+
+      <template v-slot:[`item.availableStocks`]="{ item }">
+        <v-chip :color="getStockColor(item.availableStocks)" small label>
+          {{ item.availableStocks }}
+        </v-chip>
       </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <v-menu bottom left>
-          <template v-slot:activator="{ attrs, on }">
-            <v-btn icon v-bind="attrs" v-on="on">
-              <v-icon>mdi-dots-vertical</v-icon>
-            </v-btn>
-          </template>
+        <v-btn
+          x-small
+          fab
+          elevation="0"
+          color="warning"
+          class="mr-2"
+          @click="
+            $router.push({ name: 'EditProduct', params: { id: item._id } })
+          "
+        >
+          <v-icon x-small>mdi-pencil</v-icon>
+        </v-btn>
 
-          <v-list>
-            <v-list-item
-              v-for="(action, i) in actions"
-              :key="i"
-              @click="handleAction(action.title, item)"
-            >
-              <v-list-item-title>{{ action.title }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-      </template>
-      <template v-slot:no-data>
-        <v-btn color="#000033" @click="initialize"> Reset </v-btn>
+        <v-btn
+          x-small
+          fab
+          elevation="0"
+          color="error"
+          @click="deleteItem(item)"
+        >
+          <v-icon x-small>mdi-delete</v-icon>
+        </v-btn>
       </template>
     </v-data-table>
   </v-container>
 </template>
-
 <script>
 /*eslint-disable*/
 import { mapActions } from "vuex";
@@ -260,10 +201,22 @@ export default {
       updateItem: "product/updateItem",
     }),
 
+    getStockColor(stock) {
+      if (stock <= 0) return "error";
+      if (stock < 10) return "warning";
+      return "success";
+    },
+    exportTable() {
+      // Export logic
+    },
+    showFullImage(item) {
+      // Image preview logic
+    },
+
     async initialize() {
       this.isLoading = true;
       const results = await this.getItems();
-      console.log(results)
+      console.log(results);
       this.items = results.result;
       this.isLoading = false;
     },
@@ -280,6 +233,7 @@ export default {
     },
 
     deleteItem(item) {
+      console.log(item);
       this.editedIndex = this.items.indexOf(item);
       this.itemId = item._id;
       this.editedItem = Object.assign({}, item);
@@ -346,3 +300,13 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.v-data-table ::v-deep .v-data-table__wrapper {
+  overflow-x: auto;
+}
+
+.on-hover {
+  opacity: 0.8;
+}
+</style>

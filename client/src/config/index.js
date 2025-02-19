@@ -2,6 +2,7 @@ let API_VERSION = "v1"; //default
 let SERVER = "node";
 
 let url;
+let baseURL = `http://localhost:3001`;
 
 if (process.env.NODE_ENV === "production") {
   url = `/api/${API_VERSION}/${SERVER}`;
@@ -11,4 +12,5 @@ if (process.env.NODE_ENV === "production") {
 
 module.exports = {
   url,
+  baseURL,
 };

@@ -267,6 +267,66 @@
       </v-card>
     </template>
 
+    <template v-if="selectedReportType === 'debtor'">
+      <v-card>
+        <v-data-table
+          :headers="debtorHeaders"
+          :items="debtors"
+          :search="search"
+          :loading="loading"
+        >
+          <template v-slot:item.creditLimit="{ item }">
+            ₱{{ formatNumber(item.creditLimit) }}
+          </template>
+          <template v-slot:item.availableCredit="{ item }">
+            ₱{{ formatNumber(item.availableCredit) }}
+          </template>
+          <template v-slot:item.outstandingBalance="{ item }">
+            ₱{{ formatNumber(item.creditLimit - item.availableCredit) }}
+          </template>
+          <template v-slot:item.status="{ item }">
+            <v-chip
+              :color="getStatusColor(item.creditLimit - item.availableCredit)"
+            >
+              {{ getPaymentStatus(item.creditLimit - item.availableCredit) }}
+            </v-chip>
+          </template>
+          <template v-slot:item.actions="{ item }">
+            <v-icon small @click="viewDebtorDetails(item)">mdi-eye</v-icon>
+          </template>
+        </v-data-table>
+      </v-card>
+
+      <v-dialog v-model="debtorDialog" max-width="900">
+        <v-card v-if="selectedDebtor">
+          <v-card-title>
+            {{ selectedDebtor.name }} - Transaction History
+            <v-spacer></v-spacer>
+            <v-btn icon @click="debtorDialog = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-card-title>
+
+          <v-card-text>
+            <v-data-table
+              :headers="transactionHeaders"
+              :items="flattenedTransactions"
+              :loading="loading"
+            >
+              <template v-slot:item.date="{ item }">
+                {{ formatDate(item.date) }}
+              </template>
+              <template v-slot:item.amount="{ item }">
+                ₱{{ formatNumber(item.amount) }}
+              </template>
+              <!-- <template v-slot:item.balance="{ item }">
+                ₱{{ formatNumber(item.balance) }}
+              </template> -->
+            </v-data-table>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </template>
     <!-- Sale Details Dialog -->
     <v-dialog v-model="detailsDialog" max-width="800">
       <v-card v-if="selectedSale">
@@ -358,7 +418,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "ReportView",
@@ -369,6 +429,7 @@ export default {
       reportTypes: [
         { text: "Sales Report", value: "sales" },
         { text: "Inventory Report", value: "inventory" },
+        { text: "Debtor Report", value: "debtor" },
       ],
       dateRange: {
         startDate: new Date().toISOString().slice(0, 10),
@@ -380,6 +441,26 @@ export default {
       search: "",
       detailsDialog: false,
       selectedSale: null,
+      selectedDebtor: null,
+      debtorHeaders: [
+        { text: "Name", value: "name" },
+        { text: "Credit Limit", value: "creditLimit", align: "right" },
+        { text: "Available Credit", value: "availableCredit", align: "right" },
+        {
+          text: "Outstanding Balance",
+          value: "outstandingBalance",
+          align: "right",
+        },
+        { text: "Status", value: "status", align: "center" },
+        { text: "Actions", value: "actions", sortable: false },
+      ],
+      transactionHeaders: [
+        { text: "Date", value: "date" },
+        { text: "Reference", value: "reference" },
+        { text: "Type", value: "type" },
+        { text: "Amount", value: "amount", align: "right" },
+        // { text: "Running Balance", value: "balance", align: "right" },
+      ],
       salesHeaders: [
         { text: "Date", value: "date", width: "120px" },
         { text: "Reference", value: "referenceCode" },
@@ -397,7 +478,12 @@ export default {
         { text: "Cost", value: "cost", align: "right" },
         { text: "Price", value: "price", align: "right" },
       ],
+      debtorDialog: false,
     };
+  },
+
+  created() {
+    // this.loadDebtors();
   },
 
   computed: {
@@ -406,10 +492,97 @@ export default {
       "salesSummary",
       "inventoryReport",
       "inventorySummary",
+      "debtorReport",
+      "debtorSummary",
+      "debtors",
+      "debtorTransactions",
     ]),
+
+    flattenedTransactions() {
+      if (!this.debtorTransactions) return [];
+
+      let transactions = [
+        ...(this.debtorTransactions.creditSales || []).map((sale) => ({
+          date: sale.date,
+          reference: sale.referenceCode,
+          type: "Credit Sale",
+          amount: sale.salesTotal,
+        })),
+        ...(this.debtorTransactions.payments || []).map((payment) => ({
+          date: payment.paymentDate,
+          reference: payment.referenceNumber,
+          type: "Payment",
+          amount: payment.amount,
+        })),
+      ].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      let balance = 0;
+      return transactions.map((t) => {
+        balance += t.type === "Credit Sale" ? t.amount : -t.amount;
+        return { ...t, balance };
+      });
+    },
+
+    // debtorTransactions() {
+    //   if (!this.debtorReport) return [];
+    //   return [
+    //     ...this.debtorReport.creditSales.map((sale) => ({
+    //       ...sale,
+    //       type: "credit",
+    //     })),
+    //     // ...this.debtorReport.payments.map((payment) => ({
+    //     //   ...payment,
+    //     //   type: "payment",
+    //     // })),
+    //   ].sort((a, b) => new Date(b.date) - new Date(a.date));
+    // },
   },
 
   methods: {
+    ...mapActions({
+      getItems: "debtor/getDebtors",
+    }),
+
+    getStatusColor(availableCredit) {
+      return availableCredit > 0 ? "error" : "success";
+    },
+
+    getPaymentStatus(availableCredit) {
+      console.log(availableCredit);
+      return availableCredit > 0 ? "Unpaid" : "Paid";
+    },
+
+    // async loadDebtors() {
+    //   try {
+    //     const response = await this.getItems("/debtors");
+    //     console.log(response);
+    //     this.debtors = response.data;
+    //   } catch (error) {
+    //     this.$toast.error("Error loading debtors");
+    //   }
+    // },
+
+    async viewDebtorDetails(debtor) {
+      this.selectedDebtor = debtor;
+      this.loading = true;
+      try {
+        await this.$store.dispatch("reports/getDebtorTransactions", debtor._id);
+        this.debtorDialog = true;
+      } catch (error) {
+        this.$toast.error("Error loading transactions");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    flattenTransactions(transactions) {
+      let balance = 0;
+      return transactions.map((t) => {
+        balance += t.type === "Credit Sale" ? t.amount : -t.amount;
+        return { ...t, balance };
+      });
+    },
+
     async generateReport() {
       this.loading = true;
       try {
@@ -422,6 +595,12 @@ export default {
             break;
           case "inventory":
             await this.$store.dispatch("reports/getInventoryReport");
+            break;
+          case "debtor":
+            await this.$store.dispatch("reports/getDebtorReport", {
+              ...this.dateRange,
+              debtorId: this.selectedDebtor,
+            });
             break;
         }
       } catch (error) {

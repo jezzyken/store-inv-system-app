@@ -85,7 +85,7 @@
                           >₱{{ product.price.toFixed(2) }}</span
                         >
                         <span class="caption grey--text"
-                          >Stock: {{ product.inStock }}</span
+                          >Stock: {{ product.stocks }}</span
                         >
                       </div>
                     </v-card-text>
@@ -501,6 +501,7 @@
       :debtor="selectedDebtorForPayment"
       @payment-success="handlePaymentSuccess"
       @payment-error="handlePaymentError"
+      @print-receipt="handlePrintReceipt"
     />
 
     <receipt-printer ref="receiptPrinter" :receipt="receiptData" />
@@ -676,8 +677,10 @@ export default {
     selectedDebtor(newVal) {
       if (newVal) {
         this.paymentTab = 0;
+        this.customer = newVal.name;
       } else {
         this.paymentTab = 0;
+        this.customer = "Walk-in";
       }
     },
 
@@ -981,7 +984,9 @@ export default {
       this.amountPaid = 0;
       this.amountError = "";
       this.referenceNo = "";
-      this.customer = "Walk-in";
+      this.customer = this.selectedDebtor
+        ? this.selectedDebtor.name
+        : "Walk-in";
       this.paymentType = this.paymentTypes[this.paymentTab];
     },
 
@@ -1058,8 +1063,6 @@ export default {
 
     async fetch() {
       const response = await this.getProductItems();
-
-      console.log({ data: response.result });
       this.products = response.result
         .map((product) => {
           if (product.type === "Variants" && product.variants?.length > 0) {
@@ -1067,6 +1070,7 @@ export default {
               ...product,
               productId: product._id,
               name: variant.name,
+              image: variant.image || require("@/assets/image.png"),
               upc: variant.upc,
               stocks: variant.stocks,
               _id: variant._id,
@@ -1087,6 +1091,15 @@ export default {
         .flat();
 
       this.filteredProducts = this.products;
+    },
+
+    handlePrintReceipt(receiptData) {
+      this.receiptData = receiptData;
+      this.$nextTick(() => {
+        if (this.$refs.receiptPrinter) {
+          this.$refs.receiptPrinter.showReceiptPreview();
+        }
+      });
     },
     async fetchDebtors() {
       this.debtorSearchLoading = true;

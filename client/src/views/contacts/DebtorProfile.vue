@@ -76,7 +76,6 @@
                   :headers="salesHeaders"
                   :items="salesHistory"
                   :search="salesSearch"
-                  :loading="loadingSales"
                   :items-per-page="10"
                   class="elevation-0"
                 >

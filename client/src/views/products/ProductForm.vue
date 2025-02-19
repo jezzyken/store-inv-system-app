@@ -7,7 +7,17 @@
       <v-card-text>
         <v-form v-model="valid" ref="form">
           <v-row>
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="3">
+              <v-select
+                v-model="product.type"
+                :items="types"
+                :rules="[rules.required]"
+                label="Type"
+                outlined
+                required
+              ></v-select>
+            </v-col>
+            <v-col cols="12" md="3">
               <v-text-field
                 v-model="product.name"
                 :rules="[rules.required]"
@@ -17,7 +27,7 @@
               ></v-text-field>
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="3">
               <v-select
                 v-model="product.category"
                 :items="categories"
@@ -29,7 +39,7 @@
                 required
               ></v-select>
             </v-col>
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="3">
               <v-select
                 v-model="product.brand"
                 :items="brands"
@@ -41,42 +51,58 @@
                 required
               ></v-select>
             </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="product.image"
-                label="Image URL"
-                placeholder="Enter image URL"
-                outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12">
-              <v-textarea
-                v-model="product.details"
-                label="Product Details"
-                placeholder="Enter product details"
-                outlined
-              ></v-textarea>
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="product.type"
-                :items="types"
-                :rules="[rules.required]"
-                label="Type"
-                outlined
-                required
-              ></v-select>
+            <v-col cols="6">
+              <v-row>
+                <v-col cols="12" md="12" v-if="product.type !== 'Variants'">
+                  <v-text-field
+                    v-model="product.upc"
+                    :rules="[rules.required]"
+                    label="UPC"
+                    outlined
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" md="12">
+                  <v-textarea
+                    v-model="product.details"
+                    label="Product Details"
+                    placeholder="Enter product details"
+                    outlined
+                  ></v-textarea>
+                </v-col>
+              </v-row>
             </v-col>
             <v-col cols="12" md="6" v-if="product.type !== 'Variants'">
-              <v-text-field
-                v-model="product.upc"
-                :rules="[rules.required]"
-                label="UPC"
-                outlined
-                required
-              ></v-text-field>
+              <v-card class="pa-4">
+                <div class="text-subtitle-1 mb-2">Product Image</div>
+                <v-img
+                  :src="product.image"
+                  height="200"
+                  contain
+                  class="grey lighten-2 mb-2"
+                >
+                </v-img>
+                <v-btn
+                  small
+                  block
+                  outlined
+                  @click="$refs.mainProductImage.click()"
+                  class="mt-2"
+                >
+                  <v-icon left>mdi-upload</v-icon>
+                  Upload Image
+                </v-btn>
+                <input
+                  ref="mainProductImage"
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  @change="uploadMainImage"
+                />
+              </v-card>
             </v-col>
-            <v-col cols="12" md="6" v-if="product.type !== 'Variants'">
+
+            <v-col cols="12" md="3" v-if="product.type !== 'Variants'">
               <v-text-field
                 v-model="product.cost"
                 :rules="[rules.required]"
@@ -86,7 +112,7 @@
                 required
               ></v-text-field>
             </v-col>
-            <v-col cols="12" md="6" v-if="product.type !== 'Variants'">
+            <v-col cols="12" md="3" v-if="product.type !== 'Variants'">
               <v-text-field
                 v-model="product.price"
                 :rules="[rules.required]"
@@ -96,7 +122,7 @@
                 required
               ></v-text-field>
             </v-col>
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="3">
               <v-select
                 v-model="product.unit"
                 :items="units"
@@ -108,7 +134,7 @@
                 required
               ></v-select>
             </v-col>
-            <v-col cols="12" md="6" v-if="product.type !== 'Variants'">
+            <v-col cols="12" md="3" v-if="product.type !== 'Variants'">
               <v-text-field
                 v-model="product.stocks"
                 :rules="[rules.required]"
@@ -119,17 +145,7 @@
                 :disabled="mode !== 'add'"
               ></v-text-field>
             </v-col>
-            <v-col cols="12" md="6">
-              <!-- <v-text-field
-                v-model="product.minimumSaleQty"
-                :rules="[rules.required]"
-                label="Minimum Sale Quantity"
-                type="number"
-                outlined
-                required
-              ></v-text-field> -->
-            </v-col>
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="3">
               <v-text-field
                 v-model="product.stockAlert"
                 label="Stock Alert"
@@ -137,102 +153,121 @@
                 outlined
               ></v-text-field>
             </v-col>
-            <v-col cols="6" v-if="product.type === 'Variants'">
-              <div class="d-flex">
+            <v-col cols="12" v-if="product.type === 'Variants'">
+              <div class="d-flex mb-4">
                 <v-text-field
                   v-model="newVariantName"
                   label="New Variant Name"
                   outlined
                 ></v-text-field>
-                <v-btn @click="createVariant" color="#000033" dark
+                <v-btn @click="createVariant" color="primary" dark
                   >Create Variant</v-btn
                 >
               </div>
-            </v-col>
-            <v-col cols="12" v-if="product.type === 'Variants'">
-              <v-divider></v-divider>
-            </v-col>
-            <v-col cols="12" v-if="product.type === 'Variants'">
-              <v-simple-table>
-                <template v-slot:default>
-                  <thead>
-                    <tr>
-                      <th class="text-left">Variant Code</th>
-                      <th class="text-left">Variant Name</th>
-                      <th class="text-left">Variant Cost</th>
-                      <th class="text-left">Variant Price</th>
-                      <th class="text-left">Initial Stocks</th>
-                      <th class="text-left">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="(variant, index) in product.variants"
-                      :key="index"
-                    >
-                      <td class="pa-5">
-                        <v-text-field
-                          v-model="variant.upc"
-                          outlined
-                          required
-                        ></v-text-field>
-                      </td>
-                      <td>
-                        <v-text-field
-                          v-model="variant.name"
-                          outlined
-                          required
-                          disabled
-                        ></v-text-field>
-                      </td>
-                      <td>
-                        <v-text-field
-                          v-model="variant.cost"
-                          type="number"
-                          outlined
-                          required
-                        ></v-text-field>
-                      </td>
-                      <td>
-                        <v-text-field
-                          v-model="variant.price"
-                          type="number"
-                          outlined
-                          required
-                        ></v-text-field>
-                      </td>
-                      <td>
-                        <v-text-field
-                          v-model="variant.stocks"
-                          type="Initial Stocks"
-                          outlined
-                          required
-                          :disabled="mode !== 'add'"
-                        ></v-text-field>
-                      </td>
 
-                      <td>
-                        <v-btn
-                          class="mt-n8"
-                          dark
-                          color="error"
-                          large
-                          @click="removeVariant(stock, i)"
-                        >
-                          <v-icon>mdi-trash-can-outline</v-icon>
-                        </v-btn>
-                      </td>
-                    </tr>
-                  </tbody>
-                </template>
-              </v-simple-table>
+              <v-card
+                v-for="(variant, index) in product.variants"
+                :key="index"
+                class="mb-4"
+              >
+                <v-row no-gutters>
+                  <v-col cols="3">
+                    <v-card class="pa-2">
+                      <div class="text-subtitle-2 mb-1">Variant Image</div>
+                      <v-img
+                        :src="variant.image || defaultImageUrl"
+                        height="150"
+                        contain
+                        class="grey lighten-2 variant-image"
+                      >
+                      </v-img>
+                      <v-btn
+                        block
+                        small
+                        outlined
+                        @click="$refs.fileInput[index].click()"
+                        class="mt-2"
+                      >
+                        <v-icon left small>mdi-upload</v-icon>
+                        Upload
+                      </v-btn>
+                      <input
+                        type="file"
+                        :ref="'fileInput'"
+                        hidden
+                        accept="image/*"
+                        @change="uploadImage($event, index)"
+                      />
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="9">
+                    <v-card-text>
+                      <v-row dense>
+                        <v-col cols="6">
+                          <v-text-field
+                            v-model="variant.upc"
+                            label="Variant Code"
+                            outlined
+                            dense
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="6">
+                          <v-text-field
+                            v-model="variant.name"
+                            label="Variant Name"
+                            outlined
+                            dense
+                            disabled
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="4">
+                          <v-text-field
+                            v-model="variant.cost"
+                            label="Cost"
+                            type="number"
+                            outlined
+                            dense
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="4">
+                          <v-text-field
+                            v-model="variant.price"
+                            label="Price"
+                            type="number"
+                            outlined
+                            dense
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="4">
+                          <v-text-field
+                            v-model="variant.stocks"
+                            label="Initial Stocks"
+                            type="number"
+                            outlined
+                            dense
+                            :disabled="mode !== 'add'"
+                          ></v-text-field>
+                        </v-col>
+                      </v-row>
+                    </v-card-text>
+
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="error" text @click="removeVariant(index)">
+                        <v-icon left>mdi-delete</v-icon> Remove
+                      </v-btn>
+                    </v-card-actions>
+                  </v-col>
+                </v-row>
+              </v-card>
             </v-col>
             <v-row justify="end" class="ma-0 mt-6 mx-5 my-5">
               <v-btn dark :color="pageMode.color" @click="pageMode.action">{{
                 pageMode.label
               }}</v-btn>
               <div class="ma-1"></div>
-              <v-btn>clear</v-btn>
+              <v-btn @click="$router.go(-1)">Cancel</v-btn>
             </v-row>
           </v-row>
         </v-form>
@@ -242,7 +277,9 @@
 </template>
 
 <script>
+/*eslint-disable */
 import { mapActions } from "vuex";
+const {baseURL} = require("@/config");
 export default {
   props: {
     mode: String,
@@ -255,7 +292,8 @@ export default {
         upc: "",
         category: null,
         brand: null,
-        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOtjqFKVwZWNCqI33H1OWcsUaZYww6FLLFAw&s",
+        image:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOtjqFKVwZWNCqI33H1OWcsUaZYww6FLLFAw&s",
         details: "",
         type: "",
         cost: null,
@@ -274,6 +312,8 @@ export default {
       rules: {
         required: (value) => !!value || "Required.",
       },
+      defaultImageUrl:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOtjqFKVwZWNCqI33H1OWcsUaZYww6FLLFAw&s",
     };
   },
 
@@ -286,7 +326,7 @@ export default {
       };
       if (this.mode === "add") {
         state = {
-          color: "#000033",
+          color: "primary",
           action: this.onAddItem,
           label: "add",
         };
@@ -306,6 +346,7 @@ export default {
       getUnitItems: "unit/getItem",
       getBrandItems: "brand/getItem",
       getSupplierItems: "supplier/getItem",
+      uploadFile: "uploads/uploadFile",
     }),
 
     async initialize() {
@@ -338,9 +379,6 @@ export default {
         id: this.$route?.params?.id,
         data: this.product,
       };
-
-      console.log(data)
-
       await this.updateItem(data);
       this.$router.push("/product");
     },
@@ -355,6 +393,7 @@ export default {
           name: `${this.product.name}-${this.newVariantName}`,
           cost: null,
           price: null,
+          image: this.defaultImageUrl,
         });
         this.newVariantName = "";
       }
@@ -368,6 +407,27 @@ export default {
       this.categories = category.result;
       this.units = unit.result;
       this.brands = brand.result;
+    },
+
+    async uploadImage(event, index) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const response = await this.uploadFile(file);
+
+        if (index !== undefined) {
+          this.product.variants[index].image = `${baseURL}${response.url}`;
+        } else {
+            this.product.image = `${baseURL}${response.url}`;
+        }
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
+    },
+
+    uploadMainImage(event) {
+      this.uploadImage(event);
     },
   },
   mounted() {
@@ -390,5 +450,15 @@ export default {
   height: 55px;
   min-width: 64px;
   padding: 0 16px;
+}
+
+.variant-image {
+  position: relative;
+}
+.upload-btn {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: rgba(0, 0, 0, 0.6);
 }
 </style>
