@@ -4,28 +4,30 @@ const multer = require('multer');
 const path = require('path');
 
 const storage = multer.diskStorage({
- destination: './uploads/',
- filename: (req, file, cb) => {
-   cb(null, `${Date.now()}-${file.originalname}`); 
- }
+  destination: './uploads/',
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`); 
+  }
 });
 
 const upload = multer({
- storage,
- limits: { fileSize: 5000000 },
- fileFilter: (req, file, cb) => {
-   const filetypes = /jpeg|jpg|png/;
-   const mimetype = filetypes.test(file.mimetype);
-   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-   
-   if (mimetype && extname) return cb(null, true);
-   cb('Error: Images only');
- }
+  storage,
+  limits: { fileSize: 5000000 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files are allowed'));
+  }
 });
 
 router.post('/', upload.single('file'), (req, res) => {
- if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
- res.json({ url: `/uploads/${req.file.filename}` });
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    res.json({ url: `/uploads/${req.file.filename}` });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 module.exports = router;
