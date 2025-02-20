@@ -1,11 +1,20 @@
-<!-- eslint-disable-next-line  -->
-<!-- eslint-disable  -->
-
+<!-- eslint-disable -->
 <template>
   <v-container fluid>
     <!-- Report Type and Filters -->
     <v-card class="mb-4">
       <v-card-text>
+        <v-row justify="end">
+          <v-btn
+            color="primary"
+            @click="downloadPDF"
+            :loading="downloading"
+            class="mt-2"
+          >
+            <v-icon left>mdi-file</v-icon>
+            export to pdf
+          </v-btn>
+        </v-row>
         <v-row align="center">
           <v-col cols="12" md="4">
             <v-select
@@ -18,7 +27,7 @@
           </v-col>
           <v-col cols="12" md="8" v-if="selectedReportType === 'sales'">
             <v-row>
-              <v-col cols="5">
+              <v-col cols="4">
                 <v-menu
                   v-model="startDateMenu"
                   :close-on-content-click="false"
@@ -45,7 +54,7 @@
                   ></v-date-picker>
                 </v-menu>
               </v-col>
-              <v-col cols="5">
+              <v-col cols="4">
                 <v-menu
                   v-model="endDateMenu"
                   :close-on-content-click="false"
@@ -77,11 +86,21 @@
                   color="primary"
                   @click="generateReport"
                   :loading="loading"
-                  class="mt-2"
                 >
-                  Generate
+                  search
                 </v-btn>
               </v-col>
+              <!-- <v-col cols="2">
+                <v-btn
+                  color="secondary"
+                  @click="downloadPDF"
+                  :loading="downloading"
+                  class="mt-2"
+                >
+                  <v-icon left>mdi-file-pdf</v-icon>
+                  PDF
+                </v-btn>
+              </v-col> -->
             </v-row>
           </v-col>
         </v-row>
@@ -134,7 +153,7 @@
       <v-card>
         <v-card-title>
           <v-row align="center">
-            <v-col cols="12" sm="6"> Sales List </v-col>
+            <v-col cols="12" sm="6">Sales List</v-col>
             <v-col cols="12" sm="6">
               <v-text-field
                 v-model="search"
@@ -172,7 +191,7 @@
             <v-icon small class="mr-2" @click="viewSaleDetails(item)">
               mdi-eye
             </v-icon>
-            <v-icon small @click="printSale(item)"> mdi-printer </v-icon>
+            <v-icon small @click="printSale(item)">mdi-printer</v-icon>
           </template>
         </v-data-table>
       </v-card>
@@ -224,7 +243,7 @@
       <v-card>
         <v-card-title>
           <v-row align="center">
-            <v-col cols="12" sm="6"> Inventory List </v-col>
+            <v-col cols="12" sm="6">Inventory List</v-col>
             <v-col cols="12" sm="6">
               <v-text-field
                 v-model="search"
@@ -267,6 +286,7 @@
       </v-card>
     </template>
 
+    <!-- Debtor Report -->
     <template v-if="selectedReportType === 'debtor'">
       <v-card>
         <v-data-table
@@ -319,14 +339,12 @@
               <template v-slot:item.amount="{ item }">
                 ₱{{ formatNumber(item.amount) }}
               </template>
-              <!-- <template v-slot:item.balance="{ item }">
-                ₱{{ formatNumber(item.balance) }}
-              </template> -->
             </v-data-table>
           </v-card-text>
         </v-card>
       </v-dialog>
     </template>
+
     <!-- Sale Details Dialog -->
     <v-dialog v-model="detailsDialog" max-width="800">
       <v-card v-if="selectedSale">
@@ -419,6 +437,8 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 export default {
   name: "ReportView",
@@ -438,10 +458,12 @@ export default {
       startDateMenu: false,
       endDateMenu: false,
       loading: false,
+      downloading: false,
       search: "",
       detailsDialog: false,
       selectedSale: null,
       selectedDebtor: null,
+      debtorDialog: false,
       debtorHeaders: [
         { text: "Name", value: "name" },
         { text: "Credit Limit", value: "creditLimit", align: "right" },
@@ -459,7 +481,6 @@ export default {
         { text: "Reference", value: "reference" },
         { text: "Type", value: "type" },
         { text: "Amount", value: "amount", align: "right" },
-        // { text: "Running Balance", value: "balance", align: "right" },
       ],
       salesHeaders: [
         { text: "Date", value: "date", width: "120px" },
@@ -478,12 +499,7 @@ export default {
         { text: "Cost", value: "cost", align: "right" },
         { text: "Price", value: "price", align: "right" },
       ],
-      debtorDialog: false,
     };
-  },
-
-  created() {
-    // this.loadDebtors();
   },
 
   computed: {
@@ -522,20 +538,6 @@ export default {
         return { ...t, balance };
       });
     },
-
-    // debtorTransactions() {
-    //   if (!this.debtorReport) return [];
-    //   return [
-    //     ...this.debtorReport.creditSales.map((sale) => ({
-    //       ...sale,
-    //       type: "credit",
-    //     })),
-    //     // ...this.debtorReport.payments.map((payment) => ({
-    //     //   ...payment,
-    //     //   type: "payment",
-    //     // })),
-    //   ].sort((a, b) => new Date(b.date) - new Date(a.date));
-    // },
   },
 
   methods: {
@@ -543,24 +545,177 @@ export default {
       getItems: "debtor/getDebtors",
     }),
 
+    async downloadPDF() {
+      this.downloading = true;
+      try {
+        const doc = new jsPDF();
+        const title = `${this.selectedReportType.toUpperCase()} REPORT`;
+
+        doc.setFontSize(16);
+        doc.text(title, 15, 15);
+
+        switch (this.selectedReportType) {
+          case "sales":
+            await this.generateSalesPDF(doc);
+            break;
+          case "inventory":
+            await this.generateInventoryPDF(doc);
+            break;
+          case "debtor":
+            await this.generateDebtorPDF(doc);
+            break;
+        }
+
+        doc.save(
+          `${this.selectedReportType}_report_${new Date()
+            .toISOString()
+            .slice(0, 10)}.pdf`
+        );
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+      } finally {
+        this.downloading = false;
+      }
+    },
+
+    generateSalesPDF(doc) {
+      // Add date range
+      doc.setFontSize(12);
+      doc.text(
+        `Period: ${this.formatDate(
+          this.dateRange.startDate
+        )} - ${this.formatDate(this.dateRange.endDate)}`,
+        15,
+        25
+      );
+
+      // Add summary
+      if (this.salesSummary) {
+        doc.autoTable({
+          startY: 35,
+          head: [
+            ["Total Sales", "Total Revenue", "Total Profit", "Average Profit"],
+          ],
+          body: [
+            [
+              this.salesSummary.totalSales,
+              `₱${this.formatNumber(this.salesSummary.totalRevenue)}`,
+              `₱${this.formatNumber(this.salesSummary.totalProfit)}`,
+              `₱${this.formatNumber(this.salesSummary.averageProfit)}`,
+            ],
+          ],
+          theme: "grid",
+          headStyles: { fillColor: [71, 71, 71] },
+        });
+      }
+
+      // Add sales list
+      if (this.salesReport && this.salesReport.length > 0) {
+        const tableBody = this.salesReport.map((item) => [
+          this.formatDate(item.date),
+          item.referenceCode,
+          item.customer,
+          item.paymentType,
+          `₱${this.formatNumber(item.totalRevenue)}`,
+          `₱${this.formatNumber(item.profit)}`,
+        ]);
+
+        doc.autoTable({
+          startY: doc.previousAutoTable.finalY + 15,
+          head: [
+            ["Date", "Reference", "Customer", "Payment", "Revenue", "Profit"],
+          ],
+          body: tableBody,
+          theme: "grid",
+          headStyles: { fillColor: [71, 71, 71] },
+        });
+      }
+    },
+
+    generateInventoryPDF(doc) {
+      if (this.inventorySummary) {
+        doc.autoTable({
+          startY: 25,
+          head: [
+            [
+              "Total Products",
+              "Total Stock",
+              "Low Stock Items",
+              "Inventory Value",
+            ],
+          ],
+          body: [
+            [
+              this.inventorySummary.totalProducts,
+              this.inventorySummary.totalStock,
+              this.inventorySummary.lowStockItems,
+              `₱${this.formatNumber(this.inventorySummary.inventoryValue)}`,
+            ],
+          ],
+          theme: "grid",
+          headStyles: { fillColor: [71, 71, 71] },
+        });
+      }
+
+      if (this.inventoryReport && this.inventoryReport.length > 0) {
+        const tableBody = this.inventoryReport.map((item) => [
+          item.name,
+          item.category,
+          item.brand,
+          item.totalStock,
+          `₱${this.formatNumber(item.cost)}`,
+          `₱${this.formatNumber(item.price)}`,
+        ]);
+
+        doc.autoTable({
+          startY: doc.previousAutoTable.finalY + 15,
+          head: [["Product", "Category", "Brand", "Stock", "Cost", "Price"]],
+          body: tableBody,
+          theme: "grid",
+          headStyles: { fillColor: [71, 71, 71] },
+        });
+      }
+    },
+
+    generateDebtorPDF(doc) {
+      if (this.debtors && this.debtors.length > 0) {
+        const tableBody = this.debtors.map((debtor) => {
+          const outstandingBalance =
+            debtor.creditLimit - debtor.availableCredit;
+          return [
+            debtor.name,
+            `₱${this.formatNumber(debtor.creditLimit)}`,
+            `₱${this.formatNumber(debtor.availableCredit)}`,
+            `₱${this.formatNumber(outstandingBalance)}`,
+            this.getPaymentStatus(outstandingBalance),
+          ];
+        });
+
+        doc.autoTable({
+          startY: 25,
+          head: [
+            [
+              "Name",
+              "Credit Limit",
+              "Available Credit",
+              "Outstanding Balance",
+              "Status",
+            ],
+          ],
+          body: tableBody,
+          theme: "grid",
+          headStyles: { fillColor: [71, 71, 71] },
+        });
+      }
+    },
+
     getStatusColor(availableCredit) {
       return availableCredit > 0 ? "error" : "success";
     },
 
     getPaymentStatus(availableCredit) {
-      console.log(availableCredit);
       return availableCredit > 0 ? "Unpaid" : "Paid";
     },
-
-    // async loadDebtors() {
-    //   try {
-    //     const response = await this.getItems("/debtors");
-    //     console.log(response);
-    //     this.debtors = response.data;
-    //   } catch (error) {
-    //     this.$toast.error("Error loading debtors");
-    //   }
-    // },
 
     async viewDebtorDetails(debtor) {
       this.selectedDebtor = debtor;
@@ -569,18 +724,10 @@ export default {
         await this.$store.dispatch("reports/getDebtorTransactions", debtor._id);
         this.debtorDialog = true;
       } catch (error) {
-        this.$toast.error("Error loading transactions");
+        console.error("Error loading transactions:", error);
       } finally {
         this.loading = false;
       }
-    },
-
-    flattenTransactions(transactions) {
-      let balance = 0;
-      return transactions.map((t) => {
-        balance += t.type === "Credit Sale" ? t.amount : -t.amount;
-        return { ...t, balance };
-      });
     },
 
     async generateReport() {
@@ -597,14 +744,11 @@ export default {
             await this.$store.dispatch("reports/getInventoryReport");
             break;
           case "debtor":
-            await this.$store.dispatch("reports/getDebtorReport", {
-              ...this.dateRange,
-              debtorId: this.selectedDebtor,
-            });
+            await this.$store.dispatch("reports/getDebtorReport");
             break;
         }
       } catch (error) {
-        this.$toast.error("Error generating report");
+        console.error("Error generating report:", error);
       } finally {
         this.loading = false;
       }
@@ -640,26 +784,9 @@ export default {
 
     async printSale() {
       try {
-        // Implement print functionality
-        // You might want to create a separate print-friendly view
         window.print();
       } catch (error) {
-        this.$toast.error("Error printing sale details");
-      }
-    },
-
-    exportReport() {
-      try {
-        switch (this.selectedReportType) {
-          case "sales":
-            this.$store.dispatch("reports/exportSalesReport", this.dateRange);
-            break;
-          case "inventory":
-            this.$store.dispatch("reports/exportInventoryReport");
-            break;
-        }
-      } catch (error) {
-        this.$toast.error("Error exporting report");
+        console.error("Error printing sale details:", error);
       }
     },
   },
@@ -674,38 +801,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.v-card__text {
-  padding-top: 16px;
-  padding-bottom: 16px;
-}
-
-.v-card__title {
-  padding: 16px;
-}
-
-@media print {
-  .v-app-bar,
-  .v-navigation-drawer,
-  .no-print {
-    display: none !important;
-  }
-
-  .v-main {
-    padding: 0 !important;
-  }
-}
-
-.text-h4 {
-  font-weight: 500;
-}
-
-.v-data-table ::v-deep .v-data-table__wrapper {
-  overflow-x: auto;
-}
-
-.v-chip {
-  font-weight: 500;
-}
-</style>
